@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>{{ t('records_title') }} | Eastern Vitality</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#173021",
+            secondary: "#5D7A65",
+            background: "#F7F6F2",
+            surface: "#FFFFFF",
+            "surface-container-low": "#F4F2EC",
+            "surface-container-lowest": "#FFFFFF",
+            "surface-container-high": "#ECE8DF",
+            "on-surface": "#1B1B1B",
+            "on-surface-variant": "#5F5A55",
+            outline: "#A8A29E",
+            "outline-variant": "#D6D1CA",
+            "primary-container": "#2E4A38",
+            "primary-fixed-dim": "#D7E6D6",
+            "tertiary-fixed": "#F2EDE4",
+            "tertiary-fixed-dim": "#DCCFB4",
+            "on-primary": "#FFFFFF",
+            "secondary-container": "#DCE8DE"
+          }
+        }
+      }
+    }
+  </script>
+  <style>body { font-family: "Manrope", sans-serif; background: #f7f6f2; }</style>
+</head>
+<body class="text-slate-900">
+  <nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md shadow-sm">
+    <div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto gap-4">
+      <a href="{{ url_for('home') }}" class="text-2xl font-bold tracking-tight text-emerald-950">Eastern Vitality</a>
+      <div class="hidden md:flex items-center gap-10 text-sm tracking-wide uppercase font-semibold">
+        <a class="text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('home') }}">{{ t('nav_home') }}</a>
+        <a class="text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('selection') }}">{{ t('nav_exercises') }}</a>
+        <a class="text-emerald-900 border-b-2 border-emerald-900 pb-1" href="{{ url_for('records') }}">{{ t('nav_records') }}</a>
+        <a class="text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('about') }}">{{ t('nav_about') }}</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="{{ url_for('set_language', lang='en', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-primary text-white' if current_lang == 'en' else 'bg-surface-container-low text-primary' }}">EN</a>
+        <a href="{{ url_for('set_language', lang='zh', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-primary text-white' if current_lang == 'zh' else 'bg-surface-container-low text-primary' }}">{{ t('lang_zh') }}</a>
+        <a href="{{ url_for('logout') }}" class="inline-block bg-primary text-on-primary px-8 py-2.5 rounded-full text-sm tracking-widest uppercase font-semibold hover:bg-primary-container transition-all active:scale-95 duration-200">{{ t('nav_logout') }}</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-6 pt-32 pb-10 space-y-8">
+    <section class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 h-[136px] overflow-hidden">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-[0.24em] text-emerald-700 mb-3">{{ current_user['display_name'] }}</p>
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-emerald-950">{{ t('records_title') }}</h1>
+        <p class="mt-3 text-lg text-slate-600 max-w-3xl">
+          {% if current_lang == 'zh' %}
+          查看你的训练趋势、最近完成的动作，以及 A/B 两种界面的使用情况。
+          {% else %}
+          Review your recent sessions, track score trends, and compare how often you practiced in layouts A and B.
+          {% endif %}
+        </p>
+      </div>
+      <a href="{{ url_for('selection') }}" class="inline-flex items-center justify-center rounded-full bg-emerald-950 text-white px-6 py-3 text-sm font-bold uppercase tracking-[0.2em]">{{ t('nav_start') }}</a>
+    </section>
+
+    <section class="rounded-[2rem] bg-surface-container-low p-3 flex flex-wrap items-center gap-2">
+      <a href="{{ url_for('practice_score') }}" class="rounded-full px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] text-secondary hover:bg-surface-container-high hover:text-primary transition-all">{{ tt('Scoring', '评分') }}</a>
+      <a href="{{ url_for('records') }}" class="rounded-full bg-primary px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] text-on-primary">{{ tt('Overall Data', '整体训练数据') }}</a>
+      <a href="{{ url_for('selection') }}" class="rounded-full px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] text-secondary hover:bg-surface-container-high hover:text-primary transition-all">{{ tt('Follow', '跟随练习') }}</a>
+    </section>
+
+    <section class="grid md:grid-cols-3 gap-6">
+      <article class="bg-white rounded-[2rem] p-8 shadow-[0_18px_50px_rgba(23,48,33,0.08)]">
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-stone-400 mb-3">{{ t('records_total_sessions') }}</p>
+        <p class="text-5xl font-extrabold text-emerald-950">{{ summary['total_sessions'] }}</p>
+      </article>
+      <article class="bg-emerald-950 rounded-[2rem] p-8 text-white shadow-[0_18px_50px_rgba(23,48,33,0.16)]">
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-white/70 mb-3">{{ t('records_avg_score') }}</p>
+        <p class="text-5xl font-extrabold">{{ summary['avg_score'] }}</p>
+      </article>
+      <article class="bg-stone-100 rounded-[2rem] p-8 shadow-[0_18px_50px_rgba(23,48,33,0.08)]">
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-stone-400 mb-3">{{ t('records_total_minutes') }}</p>
+        <p class="text-5xl font-extrabold text-emerald-950">{{ (summary['total_duration_sec'] // 60) if summary else 0 }}</p>
+      </article>
+    </section>
+
+    <section class="bg-white rounded-[2rem] p-8 shadow-[0_18px_50px_rgba(23,48,33,0.08)]">
+      <div class="flex items-center justify-between gap-4 mb-6">
+        <h2 class="text-2xl font-extrabold text-emerald-950">{{ t('records_recent') }}</h2>
+        <span class="text-xs font-bold uppercase tracking-[0.2em] text-stone-400">{{ recent_sessions|length }} items</span>
+      </div>
+
+      {% if recent_sessions %}
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-left">
+          <thead>
+            <tr class="text-xs uppercase tracking-[0.2em] text-stone-400 border-b border-stone-200">
+              <th class="py-3 pr-4">{% if current_lang == 'zh' %}动作{% else %}Exercise{% endif %}</th>
+              <th class="py-3 pr-4">{% if current_lang == 'zh' %}部位{% else %}Focus{% endif %}</th>
+              <th class="py-3 pr-4">{% if current_lang == 'zh' %}模式{% else %}Mode{% endif %}</th>
+              <th class="py-3 pr-4">{% if current_lang == 'zh' %}分数{% else %}Score{% endif %}</th>
+              <th class="py-3 pr-4">{% if current_lang == 'zh' %}时长{% else %}Duration{% endif %}</th>
+              <th class="py-3">{% if current_lang == 'zh' %}时间{% else %}Time{% endif %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in recent_sessions %}
+            <tr class="border-b border-stone-100 last:border-0">
+              <td class="py-4 pr-4 font-semibold text-emerald-950">{{ item['exercise_name'] }}</td>
+              <td class="py-4 pr-4 text-slate-600">{{ item['focus'].replace('_', ' ').title() }}</td>
+              <td class="py-4 pr-4"><span class="inline-flex rounded-full bg-stone-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-emerald-900">{{ item['mode'] }}</span></td>
+              <td class="py-4 pr-4 font-bold text-emerald-950">{{ item['score'] }}</td>
+              <td class="py-4 pr-4 text-slate-600">{{ item['duration_sec'] // 60 }}m {{ item['duration_sec'] % 60 }}s</td>
+              <td class="py-4 text-slate-500 text-sm">{{ item['created_at'].replace('T', ' ') }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="rounded-[1.5rem] bg-stone-50 px-6 py-10 text-center text-slate-600">{{ t('records_empty') }}</div>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>

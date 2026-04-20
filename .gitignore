@@ -1,0 +1,21 @@
+.env
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.sqlite
+*.sqlite3
+instance/
+.DS_Store
+.vscode/
+.idea/
+
+# Local/generated assets that should not be pushed as normal Git blobs.
+# Use Git LFS, CDN/object storage, or compressed demo files for deployment.
+raw_videos/
+exports/
+pose-web/reference.mp4
+pose-web/static/videos/*.mp4

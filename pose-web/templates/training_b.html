@@ -1,0 +1,267 @@
+﻿<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ exercise.name if exercise else tt('Training', '训练') }} | Eastern Vitality</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#173021",
+            secondary: "#5D7A65",
+            background: "#F7F6F2",
+            surface: "#FFFFFF",
+            "surface-container-low": "#F4F2EC",
+            "on-surface": "#1B1B1B",
+            "on-surface-variant": "#5F5A55",
+            "outline-variant": "#D6D1CA",
+            "primary-container": "#2E4A38",
+            "secondary-container": "#DCE8DE",
+            "tertiary-fixed": "#F2E7C9",
+            danger: "#B42318",
+            "danger-soft": "#FDECEC"
+          },
+          fontFamily: {
+            manrope: ["Manrope", "sans-serif"]
+          },
+          boxShadow: {
+            soft: "0 10px 30px rgba(23,48,33,0.08)",
+            heavy: "0 20px 50px rgba(23,48,33,0.18)"
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: "Manrope", sans-serif; background: radial-gradient(circle at top, #f6f4ee 0%, #ece7dc 45%, #f7f6f2 100%); opacity: 1; transition: opacity 220ms ease, transform 220ms ease; }
+    body.page-exit { opacity: 0; transform: translateY(8px); }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .hero-stage { position: relative; min-height: 760px; overflow: hidden; border-radius: 2.25rem; background: #0c0f0d; box-shadow: 0 24px 60px rgba(23,48,33,0.16); border: 1px solid rgba(255,255,255,0.08); }
+    .layer-img { image-rendering: auto; user-select: none; -webkit-user-drag: none; }
+    .floating-reference { position: absolute; top: 1.4rem; left: 50%; transform: translateX(-50%) scale(1); transform-origin: top center; width: min(11vw,120px); aspect-ratio: 9/16; border-radius: 1rem; overflow: hidden; background: rgba(20,25,21,0.88); border: 1px solid rgba(255,255,255,0.14); box-shadow: 0 10px 22px rgba(0,0,0,0.24); z-index: 20; opacity: .42; transition: transform .24s ease, opacity .24s ease, box-shadow .24s ease, border-color .24s ease; cursor: pointer; }
+    .floating-reference.is-expanded { transform: translateX(-50%) scale(1.7); opacity: 1; box-shadow: 0 18px 38px rgba(0,0,0,0.34); border-color: rgba(255,255,255,0.26); }
+    .floating-reference::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.28) 100%); pointer-events: none; }
+    .floating-reference-hint { position: absolute; right: .45rem; top: .45rem; z-index: 12; display: flex; align-items: center; justify-content: center; width: 1.65rem; height: 1.65rem; border-radius: 999px; background: rgba(0,0,0,0.34); color: #fff; border: 1px solid rgba(255,255,255,0.18); backdrop-filter: blur(10px); }
+    .glass-panel { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(16px); }
+    .score-ring { background: radial-gradient(closest-side,#ffffff 72%,transparent 73% 100%), conic-gradient(#173021 var(--score,0%), #E7E3DA 0); }
+    .pulse-dot { animation: pulseDot 1.4s infinite ease-in-out; }
+    .toggle-chip.is-active { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.32); }
+    @keyframes pulseDot { 0%,100% { opacity:.4; transform:scale(.9) } 50% { opacity:1; transform:scale(1) } }
+    @media (max-width:1024px) { .hero-stage { min-height:640px } .floating-reference { width:min(16vw,100px) } }
+    @media (max-width:768px) { .hero-stage { min-height:560px } .floating-reference { top:.9rem; width:min(22vw,84px); border-radius:.85rem } }
+  </style>
+</head>
+<body class="text-on-surface selection:bg-primary selection:text-white"
+      data-default-exercise-name="{{ exercise.name if exercise else tt('Training', '训练') }}"
+      data-default-focus="{{ focus.replace('_', ' ').title() if focus else tt('Full Body', '全身') }}"
+      data-result-url="{{ url_for('practice_score') }}"
+      data-exercise-id="{{ exercise.id if exercise else '' }}"
+      data-mode="{{ mode }}"
+      data-label-ready="{{ tt('Ready', '准备完成') }}"
+      data-label-starting="{{ tt('Starting', '正在启动') }}"
+      data-label-tracking="{{ tt('Tracking', '追踪中') }}"
+      data-label-paused="{{ tt('Paused', '已暂停') }}"
+      data-label-running="{{ tt('Running', '进行中') }}"
+      data-label-error="{{ tt('Error', '错误') }}"
+      data-message-default="{{ tt('Click Start to begin live tracking.', '点击开始，进入实时追踪。') }}"
+      data-message-fallback="{{ tt('Keep practicing steadily.', '继续稳定练习。') }}"
+      data-message-error="{{ tt('Unable to load live tracking.', '无法加载实时追踪画面。') }}"
+      data-message-secure-context="{{ tt('Camera access requires HTTPS or localhost.', '摄像头访问需要 HTTPS 或本地 localhost 环境。') }}"
+      data-message-camera-denied="{{ tt('Camera access was denied. Please allow camera permissions.', '摄像头权限被拒绝，请允许浏览器访问摄像头。') }}"
+      data-message-loading-camera="{{ tt('Preparing your camera and pose model.', '正在准备摄像头与姿态模型。') }}"
+      data-message-move-into-view="{{ tt('Move into the camera view so we can analyze your posture.', '请进入摄像头取景范围，系统才能分析你的姿态。') }}">
+  <nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md shadow-sm transition-colors duration-300">
+    <div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto">
+      <a href="{{ url_for('home') }}" class="text-2xl font-bold tracking-tight text-emerald-950">Eastern Vitality</a>
+      <div class="hidden md:flex items-center gap-10">
+        <a class="text-sm tracking-wide uppercase font-semibold text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('home') }}">{{ t('nav_home') }}</a>
+        <a class="text-sm tracking-wide uppercase font-semibold text-emerald-900 border-b-2 border-emerald-900 pb-1" href="{{ url_for('selection') }}">{{ t('nav_exercises') }}</a>
+        <a class="text-sm tracking-wide uppercase font-semibold text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('records') }}">{{ t('nav_records') }}</a>
+        <a class="text-sm tracking-wide uppercase font-semibold text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('about') }}">{{ t('nav_about') }}</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="{{ url_for('set_language', lang='en', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-primary text-white' if current_lang == 'en' else 'bg-surface-container-low text-primary' }}">EN</a>
+        <a href="{{ url_for('set_language', lang='zh', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-primary text-white' if current_lang == 'zh' else 'bg-surface-container-low text-primary' }}">{{ t('lang_zh') }}</a>
+        <a href="{{ url_for('selection') }}" class="inline-block bg-primary text-white px-8 py-2.5 rounded-full text-sm tracking-widest uppercase font-semibold hover:bg-primary-container transition-all active:scale-95 duration-200">{{ tt('Back to Library', '返回动作库') }}</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="pt-28 pb-32 px-6 md:px-10 max-w-screen-2xl mx-auto">
+    <section class="mb-8 flex flex-col xl:flex-row xl:items-end xl:justify-between gap-6">
+      <div>
+        <p class="text-xs tracking-[0.22em] uppercase text-secondary font-bold mb-3">{{ tt('Session Active', '训练进行页') }}</p>
+        <div class="flex flex-wrap items-center gap-3 mb-4">
+          <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-primary leading-tight">{{ exercise.name if exercise else tt('Training Session', '训练会话') }}</h1>
+          <span class="inline-flex items-center rounded-full bg-primary px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white">{{ tt('Layout B', 'B 模式') }}</span>
+        </div>
+        <p class="text-lg md:text-xl text-on-surface-variant mt-3 max-w-3xl">{{ tt('Camera-first layout with a centered floating reference window, designed to reduce eye switching between two equal columns.', '以摄像头为主的布局，中上方悬浮参考视频，减少左右来回切换视线的负担。') }}</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-4">
+        <a href="{{ url_for('training', mode='a') }}" class="rounded-full px-5 py-3 text-xs font-bold uppercase tracking-[0.2em] {% if mode == 'a' %}bg-primary text-white{% else %}bg-surface-container-low text-primary{% endif %}">{{ tt('Use A', '使用 A') }}</a>
+        <a href="{{ url_for('training', mode='b') }}" class="rounded-full px-5 py-3 text-xs font-bold uppercase tracking-[0.2em] {% if mode == 'b' %}bg-primary text-white{% else %}bg-surface-container-low text-primary{% endif %}">{{ tt('Use B', '使用 B') }}</a>
+        <div class="bg-surface-container-low px-5 py-3 rounded-full shadow-sm">
+          <p class="text-[10px] uppercase tracking-[0.2em] text-secondary font-bold">{{ tt('Focus', '关注部位') }}</p>
+          <p id="focus-name-top" class="text-sm font-bold text-primary">{{ focus.replace('_', ' ').title() if focus else tt('Full Body', '全身') }}</p>
+        </div>
+        <div class="bg-surface-container-low px-5 py-3 rounded-full shadow-sm">
+          <p class="text-[10px] uppercase tracking-[0.2em] text-secondary font-bold">{{ tt('Match', '匹配度') }}</p>
+          <p id="score-top" class="text-sm font-bold text-primary">0</p>
+        </div>
+        <div class="bg-surface-container-low px-5 py-3 rounded-full shadow-sm">
+          <p class="text-[10px] uppercase tracking-[0.2em] text-secondary font-bold">{{ tt('Status', '状态') }}</p>
+          <p id="tracking-status" class="text-sm font-bold text-primary">{{ tt('Ready', '准备完成') }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="hero-stage" id="hero-stage">
+      <div class="absolute inset-0">
+        <video id="camera-video" class="absolute inset-0 w-full h-full object-cover layer-img" autoplay playsinline muted></video>
+        <canvas id="camera-user-skeleton" class="absolute inset-0 w-full h-full object-cover pointer-events-none layer-img" aria-label="User skeleton overlay"></canvas>
+        <img id="right-reference-overlay" class="absolute inset-0 w-full h-full object-cover pointer-events-none layer-img" alt="Reference mapped overlay" src="" />
+      </div>
+      <div class="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-black/45 pointer-events-none"></div>
+      <div class="absolute top-6 left-6 z-20 glass-panel rounded-3xl px-5 py-4 text-white max-w-sm">
+        <p class="text-[10px] uppercase tracking-[0.2em] text-white/70 font-bold mb-2">{{ tt('Live Tracking', '实时追踪') }}</p>
+        <p id="feedback-message-top" class="text-sm leading-relaxed text-white/90">{{ tt('Click Start to begin live tracking.', '点击开始，进入实时追踪。') }}</p>
+      </div>
+      <div class="absolute top-6 right-6 z-20 glass-panel rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-white pulse-dot"></span>{{ tt('Camera Focus', '摄像头主视角') }}
+      </div>
+
+      <div class="floating-reference" id="floating-reference" tabindex="0" role="button" aria-pressed="false" aria-label="{{ tt('Expand reference video', '放大参考视频') }}">
+        <div class="floating-reference-hint"><span class="material-symbols-outlined text-[16px]">zoom_out_map</span></div>
+        <video id="reference-video" class="absolute inset-0 w-full h-full object-cover" loop playsinline preload="auto">
+          <source src="/{{ exercise.video }}" type="video/mp4">
+        </video>
+        <img id="left-reference-skeleton" class="absolute inset-0 w-full h-full object-cover pointer-events-none layer-img" alt="Reference skeleton overlay" src="" />
+        <div class="absolute inset-x-0 bottom-0 z-10 px-4 py-3 text-white">
+          <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-white/80">{{ tt('Reference Video', '参考视频') }}</p>
+          <p class="text-sm font-semibold">{{ exercise.name if exercise else tt('Reference', '参考') }}</p>
+        </div>
+      </div>
+
+      <div class="absolute bottom-28 left-1/2 -translate-x-1/2 z-20 w-[90%] max-w-lg">
+        <div id="feedback-banner" class="hidden bg-danger-soft text-[#8F1D14] rounded-2xl px-5 py-4 shadow-soft border border-[#F2C8C5] flex items-start gap-3">
+          <span class="material-symbols-outlined mt-0.5">warning</span>
+          <p id="feedback-banner-text" class="text-sm font-semibold leading-relaxed">{{ tt('Relax the shoulder and keep the torso steady.', '放松肩部，保持躯干稳定。') }}</p>
+        </div>
+      </div>
+
+      <div class="absolute bottom-6 left-6 right-6 z-20 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+        <div class="glass-panel rounded-3xl p-5 text-white max-w-md">
+          <p class="text-[10px] uppercase tracking-[0.2em] text-white/65 font-bold mb-2">{{ tt('Focus Area', '关注区域') }}</p>
+          <p id="focus-name" class="text-xl font-bold">{{ focus.replace('_', ' ').title() if focus else tt('Full Body', '全身') }}</p>
+          <p class="text-sm text-white/80 mt-2">{{ tt('Keep your eyes on the camera view and use the floating reference only as a rhythm guide.', '主要观察自己的摄像头画面，小参考视频只作为节奏和细节辅助。') }}</p>
+        </div>
+        <div class="flex flex-wrap justify-end gap-3">
+          <button data-action="toggle-reference-skeleton" class="toggle-chip is-active rounded-full bg-white/10 px-4 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white backdrop-blur-md border border-white/10">{{ tt('Video Skeleton', '参考骨骼') }}</button>
+          <button data-action="toggle-user-skeleton" class="toggle-chip is-active rounded-full bg-white/10 px-4 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white backdrop-blur-md border border-white/10">{{ tt('User Skeleton', '用户骨骼') }}</button>
+          <button data-action="toggle-reference-overlay" class="toggle-chip is-active rounded-full bg-white/10 px-4 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white backdrop-blur-md border border-white/10">{{ tt('Reference Overlay', '映射骨骼') }}</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="bg-white rounded-[2rem] shadow-soft border border-outline-variant/20 p-6 flex items-center gap-5">
+        <div id="score-ring" class="score-ring w-28 h-28 rounded-full flex items-center justify-center shrink-0" style="--score: 0%;">
+          <div class="w-20 h-20 rounded-full bg-white flex items-center justify-center flex-col">
+            <span id="score-value" class="text-3xl font-extrabold text-primary">0</span>
+            <span class="text-[10px] uppercase tracking-[0.2em] text-secondary font-bold">{{ tt('Score', '得分') }}</span>
+          </div>
+        </div>
+        <div>
+          <p class="text-xs tracking-[0.2em] uppercase text-secondary font-bold mb-2">{{ tt('Overall Match', '整体匹配度') }}</p>
+          <h3 class="text-2xl font-extrabold text-primary mb-2">{{ tt('Camera-first Review', '主视角回顾') }}</h3>
+          <p class="text-on-surface-variant leading-relaxed">{{ tt('The main camera view stays dominant while the reference remains available above it.', '主画面始终以用户摄像头为核心，参考视频则保留在上方辅助查看。') }}</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-[2rem] shadow-soft border border-outline-variant/20 p-6">
+        <p class="text-xs tracking-[0.2em] uppercase text-secondary font-bold mb-2">{{ tt('Current Exercise', '当前动作') }}</p>
+        <h3 id="exercise-name" class="text-2xl font-extrabold text-primary mb-3">{{ exercise.name if exercise else tt('Training', '训练') }}</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-surface-container-low rounded-2xl p-4">
+            <p class="text-[10px] uppercase tracking-[0.2em] text-secondary font-bold mb-1">{{ tt('Mode', '模式') }}</p>
+            <p class="text-sm font-bold text-primary">{{ tt('B Layout', 'B 模式') }}</p>
+          </div>
+          <div class="bg-surface-container-low rounded-2xl p-4">
+            <p class="text-[10px] uppercase tracking-[0.2em] text-secondary font-bold mb-1">{{ tt('State', '状态') }}</p>
+            <p id="session-state" class="text-sm font-bold text-primary">{{ tt('Paused', '已暂停') }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-[2rem] shadow-soft border border-outline-variant/20 p-6">
+        <p class="text-xs tracking-[0.2em] uppercase text-secondary font-bold mb-2">{{ tt('Real-time Guidance', '实时提示') }}</p>
+        <h3 class="text-2xl font-extrabold text-primary mb-3">{{ tt('Live Feedback', '动作反馈') }}</h3>
+        <div id="feedback-message" class="bg-surface-container-low rounded-2xl p-5 text-on-surface-variant leading-relaxed text-lg min-h-[120px]">{{ tt('Click Start to begin live tracking.', '点击开始，进入实时追踪。') }}</div>
+      </div>
+    </section>
+  </main>
+
+  <div class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+    <div class="bg-primary text-white rounded-full shadow-[0_20px_50px_rgba(23,48,33,0.24)] px-5 py-4 flex items-center gap-4 border border-white/10">
+      <button id="reset-btn" class="w-11 h-11 rounded-full hover:bg-white/10 transition-colors flex items-center justify-center" title="{{ tt('Reset', '重置') }}"><span class="material-symbols-outlined">restart_alt</span></button>
+      <button id="audio-toggle-btn" type="button" class="px-5 py-3 rounded-full bg-white/10 text-white font-bold text-xs tracking-[0.18em] uppercase hover:bg-white/20 transition-colors flex items-center gap-2" title="{{ tt('Toggle sound', '切换声音') }}" aria-pressed="true" data-label-on="{{ tt('Sound On', '声音开启') }}" data-label-off="{{ tt('Sound Off', '声音关闭') }}">
+        <span class="material-symbols-outlined" data-audio-icon>volume_up</span>
+        <span data-audio-label>{{ tt('Sound On', '声音开启') }}</span>
+      </button>
+      <div class="w-px h-7 bg-white/20"></div>
+      <button id="pause-btn" class="px-7 py-3 rounded-full bg-tertiary-fixed text-primary font-bold text-xs tracking-[0.18em] uppercase hover:scale-95 transition-transform flex items-center gap-2" title="{{ tt('Pause Session', '暂停训练') }}"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">pause</span>{{ tt('Pause Session', '暂停训练') }}</button>
+      <button id="start-btn" class="px-7 py-3 rounded-full bg-white/10 text-white font-bold text-xs tracking-[0.18em] uppercase hover:bg-white/20 transition-colors flex items-center gap-2" title="{{ tt('Start Session', '开始训练') }}"><span class="material-symbols-outlined">play_arrow</span>{{ tt('Start', '开始') }}</button>
+      <button id="finish-btn" type="button" class="w-11 h-11 rounded-full hover:bg-white/10 transition-colors flex items-center justify-center" title="{{ tt('Finish and open scoring result', '结束并打开评分结果') }}"><span class="material-symbols-outlined">close</span></button>
+    </div>
+  </div>
+
+  <script>
+    const floatingReference = document.getElementById('floating-reference');
+    const heroStage = document.getElementById('hero-stage');
+
+    function toggleFloatingReference() {
+      if (!floatingReference) return;
+      const expanded = floatingReference.classList.toggle('is-expanded');
+      floatingReference.setAttribute('aria-pressed', expanded ? 'true' : 'false');
+    }
+
+    function collapseFloatingReference() {
+      if (!floatingReference) return;
+      floatingReference.classList.remove('is-expanded');
+      floatingReference.setAttribute('aria-pressed', 'false');
+    }
+
+    if (floatingReference) {
+      floatingReference.addEventListener('click', (event) => {
+        event.stopPropagation();
+        toggleFloatingReference();
+      });
+
+      floatingReference.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          toggleFloatingReference();
+        }
+        if (event.key === 'Escape') {
+          collapseFloatingReference();
+        }
+      });
+    }
+
+    if (heroStage) {
+      heroStage.addEventListener('click', (event) => {
+        if (floatingReference && !floatingReference.contains(event.target)) {
+          collapseFloatingReference();
+        }
+      });
+    }
+  </script>
+  <script type="module" src="{{ url_for('static', filename='js/training-core.js') }}"></script>
+</body>
+</html>

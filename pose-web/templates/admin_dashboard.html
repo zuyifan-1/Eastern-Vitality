@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>{{ t('admin_title') }} | Eastern Vitality</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <style>body { font-family: "Manrope", sans-serif; background: #f5f3ed; }</style>
+</head>
+<body class="text-slate-900">
+  <nav class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-stone-200/80">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+      <a href="{{ url_for('home') }}" class="text-2xl font-extrabold tracking-tight text-emerald-950">Eastern Vitality</a>
+      <div class="flex items-center gap-3">
+        <a href="{{ url_for('set_language', lang='en', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-emerald-950 text-white' if current_lang == 'en' else 'bg-stone-100 text-emerald-950' }}">EN</a>
+        <a href="{{ url_for('set_language', lang='zh', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-emerald-950 text-white' if current_lang == 'zh' else 'bg-stone-100 text-emerald-950' }}">{{ t('lang_zh') }}</a>
+        <a href="{{ url_for('records') }}" class="px-4 py-2 rounded-full bg-stone-100 text-emerald-950 text-xs font-bold uppercase tracking-[0.2em]">{{ t('nav_records') }}</a>
+        <a href="{{ url_for('analytics') }}" class="px-4 py-2 rounded-full bg-stone-100 text-emerald-950 text-xs font-bold uppercase tracking-[0.2em]">{{ t('nav_analytics') }}</a>
+        <a href="{{ url_for('logout') }}" class="px-4 py-2 rounded-full bg-emerald-950 text-white text-xs font-bold uppercase tracking-[0.2em]">{{ t('nav_logout') }}</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-6 py-10 space-y-8">
+    <section>
+      <p class="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700 mb-3">Admin</p>
+      <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-emerald-950">{{ t('admin_title') }}</h1>
+      <p class="mt-3 text-lg text-slate-600 max-w-3xl">
+        {% if current_lang == 'zh' %}
+        查看注册用户、训练完成情况和最近活动，帮助你快速了解平台运营状态。
+        {% else %}
+        Review registered users, completed sessions, and the most recent activity to keep the platform running smoothly.
+        {% endif %}
+      </p>
+    </section>
+
+    <section class="grid md:grid-cols-3 gap-6">
+      <article class="bg-white rounded-[2rem] p-8 shadow-[0_16px_40px_rgba(23,48,33,0.08)]"><p class="text-xs font-bold uppercase tracking-[0.2em] text-stone-400 mb-3">{{ t('admin_users') }}</p><p class="text-5xl font-extrabold text-emerald-950">{{ overview['total_users'] }}</p></article>
+      <article class="bg-emerald-950 rounded-[2rem] p-8 text-white shadow-[0_16px_40px_rgba(23,48,33,0.16)]"><p class="text-xs font-bold uppercase tracking-[0.2em] text-white/70 mb-3">{{ t('admin_sessions') }}</p><p class="text-5xl font-extrabold">{{ overview['total_sessions'] }}</p></article>
+      <article class="bg-stone-100 rounded-[2rem] p-8 shadow-[0_16px_40px_rgba(23,48,33,0.08)]"><p class="text-xs font-bold uppercase tracking-[0.2em] text-stone-400 mb-3">{{ t('admin_best_score') }}</p><p class="text-5xl font-extrabold text-emerald-950">{{ overview['best_score'] }}</p></article>
+    </section>
+
+    <section class="grid lg:grid-cols-2 gap-6">
+      <article class="bg-white rounded-[2rem] p-8 shadow-[0_16px_40px_rgba(23,48,33,0.08)]">
+        <h2 class="text-2xl font-extrabold text-emerald-950 mb-5">{{ t('analytics_mode_split') }}</h2>
+        <div class="space-y-4">
+          {% for row in mode_rows %}
+          <div class="flex items-center justify-between rounded-2xl bg-stone-50 px-4 py-4">
+            <span class="font-semibold text-emerald-950">Mode {{ row['mode']|upper }}</span>
+            <span class="text-lg font-extrabold text-emerald-950">{{ row['total'] }}</span>
+          </div>
+          {% else %}
+          <p class="text-slate-500">{% if current_lang == 'zh' %}暂无数据{% else %}No session data yet.{% endif %}</p>
+          {% endfor %}
+        </div>
+      </article>
+
+      <article class="bg-white rounded-[2rem] p-8 shadow-[0_16px_40px_rgba(23,48,33,0.08)]">
+        <h2 class="text-2xl font-extrabold text-emerald-950 mb-5">{{ t('analytics_top_users') }}</h2>
+        <div class="space-y-4">
+          {% for row in top_users %}
+          <div class="flex items-center justify-between gap-4 rounded-2xl bg-stone-50 px-4 py-4">
+            <div>
+              <p class="font-semibold text-emerald-950">{{ row['display_name'] }}</p>
+              <p class="text-sm text-slate-500">{{ row['email'] }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-lg font-extrabold text-emerald-950">{{ row['total_sessions'] }}</p>
+              <p class="text-xs uppercase tracking-[0.18em] text-stone-400">avg {{ row['avg_score'] }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </article>
+    </section>
+
+    <section class="bg-white rounded-[2rem] p-8 shadow-[0_16px_40px_rgba(23,48,33,0.08)]">
+      <h2 class="text-2xl font-extrabold text-emerald-950 mb-5">{% if current_lang == 'zh' %}最近活动{% else %}Recent Activity{% endif %}</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-left">
+          <thead><tr class="text-xs uppercase tracking-[0.18em] text-stone-400 border-b border-stone-200"><th class="py-3 pr-4">{% if current_lang == 'zh' %}用户{% else %}User{% endif %}</th><th class="py-3 pr-4">{% if current_lang == 'zh' %}动作{% else %}Exercise{% endif %}</th><th class="py-3 pr-4">{% if current_lang == 'zh' %}模式{% else %}Mode{% endif %}</th><th class="py-3 pr-4">{% if current_lang == 'zh' %}分数{% else %}Score{% endif %}</th><th class="py-3">{% if current_lang == 'zh' %}时间{% else %}Time{% endif %}</th></tr></thead>
+          <tbody>
+            {% for item in recent_sessions %}
+            <tr class="border-b border-stone-100 last:border-0"><td class="py-4 pr-4 font-semibold text-emerald-950">{{ item['display_name'] }}</td><td class="py-4 pr-4 text-slate-600">{{ item['exercise_name'] }}</td><td class="py-4 pr-4 text-slate-600">{{ item['mode']|upper }}</td><td class="py-4 pr-4 font-bold text-emerald-950">{{ item['score'] }}</td><td class="py-4 text-slate-500 text-sm">{{ item['created_at'].replace('T', ' ') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

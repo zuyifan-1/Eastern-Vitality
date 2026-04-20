@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>{{ tt('Training Result', '训练结果') }} | Eastern Vitality</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <style>body { font-family: "Manrope", sans-serif; background: #fbf9f9; }</style>
+</head>
+<body class="text-slate-900">
+  <nav class="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md shadow-sm">
+    <div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto gap-4">
+      <a href="{{ url_for('home') }}" class="text-2xl font-bold tracking-tight text-emerald-950">Eastern Vitality</a>
+      <div class="hidden md:flex items-center gap-10 text-sm tracking-wide uppercase font-semibold">
+        <a class="text-stone-500 hover:text-emerald-800" href="{{ url_for('home') }}">{{ t('nav_home') }}</a>
+        <a class="text-stone-500 hover:text-emerald-800" href="{{ url_for('selection') }}">{{ t('nav_exercises') }}</a>
+        <a class="text-emerald-900 border-b-2 border-emerald-900 pb-1" href="{{ url_for('records') }}">{{ t('nav_records') }}</a>
+        <a class="text-stone-500 hover:text-emerald-800" href="{{ url_for('about') }}">{{ t('nav_about') }}</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="{{ url_for('set_language', lang='en', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-emerald-950 text-white' if current_lang == 'en' else 'bg-stone-100 text-emerald-950' }}">EN</a>
+        <a href="{{ url_for('set_language', lang='zh', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-emerald-950 text-white' if current_lang == 'zh' else 'bg-stone-100 text-emerald-950' }}">{{ t('lang_zh') }}</a>
+        <a href="{{ url_for('selection') }}" class="inline-block bg-emerald-950 text-white px-8 py-2.5 rounded-full text-sm tracking-widest uppercase font-semibold">{{ tt('Start Practice', '开始练习') }}</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="pt-32 pb-24 px-6 md:px-12 max-w-screen-2xl mx-auto space-y-12">
+    <section class="bg-white rounded-[2rem] p-8 md:p-12 shadow-sm flex flex-col md:flex-row items-center gap-10">
+      <div class="relative w-60 h-60 rounded-full bg-stone-100 flex items-center justify-center shrink-0">
+        <div class="absolute inset-4 rounded-full border-[14px] border-stone-200"></div>
+        <div class="absolute inset-4 rounded-full border-[14px] border-emerald-950 border-r-stone-200 border-b-stone-200 rotate-45"></div>
+        <div class="relative z-10 text-center">
+          <div class="text-5xl font-extrabold text-emerald-950">{{ result.score if result and result.get('score') else 81 }}</div>
+          <div class="text-xs uppercase tracking-[0.2em] text-slate-500 font-bold mt-2">{{ tt('Accuracy Score', '准确度评分') }}</div>
+        </div>
+      </div>
+      <div class="space-y-4 text-center md:text-left">
+        <p class="text-xs uppercase tracking-[0.24em] font-bold text-amber-700">{{ tt('Session Complete', '训练完成') }}</p>
+        <h1 class="text-4xl md:text-5xl font-extrabold text-emerald-950 tracking-tight">{{ result.exercise_name if result and result.get('exercise_name') else 'Baduanjin - Drawing the Bow' }}</h1>
+        <div class="flex flex-wrap gap-3 justify-center md:justify-start">
+          <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-stone-100 text-emerald-950 text-sm font-bold">{{ result.duration if result and result.get('duration') else '6m 20s' }}</span>
+          <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-stone-100 text-emerald-950 text-sm font-bold">{{ result.completion if result and result.get('completion') else tt('Good Completion', '完成良好') }}</span>
+        </div>
+        <p class="text-lg text-slate-600 leading-relaxed max-w-2xl">{{ tt('A balanced practice session. Your flow was consistent, though upper-body stillness can improve further in the next round.', '这是一场节奏比较稳定的练习。整体动作流畅，不过上半身稳定性还有进一步提升空间。') }}</p>
+      </div>
+    </section>
+
+    <section class="grid md:grid-cols-3 gap-6">
+      <article class="bg-red-50 rounded-[2rem] p-8"><p class="text-xs uppercase tracking-[0.2em] font-bold text-red-500 mb-3">{{ tt('Main Issue', '主要问题') }}</p><h3 class="text-2xl font-extrabold text-red-700 mb-3">{{ result.main_issue if result and result.get('main_issue') else tt('Shoulder tension', '肩部紧张') }}</h3><p class="text-slate-600">{{ tt('Frequent tension was detected around the shoulders during the pulling phase.', '在拉弓阶段检测到肩部周围容易紧张。') }}</p></article>
+      <article class="bg-white rounded-[2rem] p-8 shadow-sm"><p class="text-xs uppercase tracking-[0.2em] font-bold text-slate-400 mb-3">{{ tt('Next Suggestion', '下一步建议') }}</p><h3 class="text-2xl font-extrabold text-emerald-950 mb-3">{{ result.next_suggestion if result and result.get('next_suggestion') else tt('Relax the upper body', '放松上半身') }}</h3><p class="text-slate-600">{{ tt('Slow down slightly and let the shoulders sink before each arm extension.', '在每次手臂伸展前稍微放慢节奏，让肩膀先沉下来。') }}</p></article>
+      <article class="bg-stone-100 rounded-[2rem] p-8"><p class="text-xs uppercase tracking-[0.2em] font-bold text-slate-400 mb-3">{{ tt('Recommended Drill', '推荐练习') }}</p><h3 class="text-2xl font-extrabold text-emerald-950 mb-3">{{ result.related_exercise if result and result.get('related_exercise') else tt('Two Hands Hold the Sky', '双手托天') }}</h3><p class="text-slate-600">{{ tt('Use a shorter drill to reinforce spinal lift and shoulder relaxation.', '用一个更短的动作，进一步强化脊柱上提和肩部放松。') }}</p></article>
+    </section>
+
+    <section class="text-center pt-8">
+      <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+        <a href="{{ url_for('selection') }}" class="w-full sm:w-auto px-10 py-4 bg-emerald-950 text-white rounded-full text-sm uppercase tracking-widest font-bold">{{ tt('Practice Again', '再练一次') }}</a>
+        <a href="{{ url_for('records') }}" class="w-full sm:w-auto px-10 py-4 bg-stone-100 text-emerald-950 rounded-full text-sm uppercase tracking-widest font-bold">{{ tt('Open Records', '查看记录') }}</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

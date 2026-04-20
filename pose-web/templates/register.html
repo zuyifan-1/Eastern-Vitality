@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>{{ t('auth_register_title') }} | Eastern Vitality</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <style>body { font-family: "Manrope", sans-serif; background: linear-gradient(135deg, #f7f6f2 0%, #ebe7da 100%); }</style>
+</head>
+<body class="min-h-screen text-slate-900">
+  <div class="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between">
+    <a href="{{ url_for('home') }}" class="text-2xl font-extrabold tracking-tight text-emerald-950">Eastern Vitality</a>
+    <div class="flex items-center gap-3">
+      <a href="{{ url_for('set_language', lang='en', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-emerald-950 text-white' if current_lang == 'en' else 'bg-white text-emerald-950' }}">EN</a>
+      <a href="{{ url_for('set_language', lang='zh', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-emerald-950 text-white' if current_lang == 'zh' else 'bg-white text-emerald-950' }}">中文</a>
+    </div>
+  </div>
+  <main class="max-w-6xl mx-auto px-6 pb-12 grid lg:grid-cols-2 gap-10 items-center">
+    <section class="space-y-6">
+      <p class="text-xs font-bold uppercase tracking-[0.24em] text-emerald-800">Eastern Vitality</p>
+      <h1 class="text-5xl font-extrabold tracking-tight text-emerald-950">{{ t('auth_register_title') }}</h1>
+      <p class="text-lg leading-relaxed text-slate-600">
+        {% if current_lang == 'zh' %}
+        注册后可以保存每次训练分数、查看个人记录，并在需要时进入后台与统计页面。
+        {% else %}
+        Create an account to save your training scores, view personal records, and unlock access to the admin and analytics views when allowed.
+        {% endif %}
+      </p>
+    </section>
+    <section class="bg-white rounded-[2rem] p-8 md:p-10 shadow-[0_20px_60px_rgba(23,48,33,0.12)] border border-white/80">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="space-y-3 mb-6">
+            {% for category, message in messages %}
+              <div class="rounded-2xl px-4 py-3 text-sm font-medium {{ 'bg-red-50 text-red-700 border border-red-200' if category == 'error' else 'bg-emerald-50 text-emerald-700 border border-emerald-200' }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      <form method="post" class="space-y-5">
+        <div>
+          <label class="block text-sm font-bold text-emerald-950 mb-2">{{ t('auth_name') }}</label>
+          <input class="w-full rounded-2xl border border-stone-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-900/20" name="display_name" type="text" required>
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-emerald-950 mb-2">{{ t('auth_email') }}</label>
+          <input class="w-full rounded-2xl border border-stone-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-900/20" name="email" type="email" required>
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-emerald-950 mb-2">{{ t('auth_password') }}</label>
+          <input class="w-full rounded-2xl border border-stone-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-900/20" name="password" type="password" minlength="6" required>
+        </div>
+        <button class="w-full rounded-full bg-emerald-950 text-white py-4 text-sm font-bold uppercase tracking-[0.24em] hover:bg-emerald-800 transition-colors" type="submit">{{ t('auth_submit_register') }}</button>
+      </form>
+      <a href="{{ url_for('login') }}" class="block mt-5 text-sm font-semibold text-emerald-900 hover:text-emerald-700">{{ t('auth_switch_login') }}</a>
+    </section>
+  </main>
+</body>
+</html>

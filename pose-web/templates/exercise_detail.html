@@ -1,0 +1,110 @@
+﻿<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>{{ exercise.name if exercise else tt('Exercise Detail', '动作详情') }} | Eastern Vitality</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <style>body { font-family: "Manrope", sans-serif; background: #F7F6F2; }</style>
+</head>
+<body class="text-slate-900 selection:bg-emerald-950 selection:text-white">
+  <nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md shadow-sm">
+    <div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto gap-4">
+      <a href="{{ url_for('home') }}" class="text-2xl font-bold tracking-tight text-emerald-950">Eastern Vitality</a>
+      <div class="hidden md:flex items-center gap-10 text-sm tracking-wide uppercase font-semibold">
+        <a class="text-stone-500 hover:text-emerald-800" href="{{ url_for('home') }}">{{ t('nav_home') }}</a>
+        <a class="text-emerald-900 border-b-2 border-emerald-900 pb-1" href="{{ url_for('selection') }}">{{ t('nav_exercises') }}</a>
+        <a class="text-stone-500 hover:text-emerald-800" href="{{ url_for('records') }}">{{ t('nav_records') }}</a>
+        <a class="text-stone-500 hover:text-emerald-800" href="{{ url_for('about') }}">{{ t('nav_about') }}</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="{{ url_for('set_language', lang='en', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-emerald-950 text-white' if current_lang == 'en' else 'bg-stone-100 text-emerald-950' }}">EN</a>
+        <a href="{{ url_for('set_language', lang='zh', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-emerald-950 text-white' if current_lang == 'zh' else 'bg-stone-100 text-emerald-950' }}">{{ t('lang_zh') }}</a>
+        <a href="{{ url_for('selection') }}" class="inline-block bg-emerald-950 text-white px-8 py-2.5 rounded-full text-sm tracking-widest uppercase font-semibold">{{ tt('Back to Library', '返回动作库') }}</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="pt-32 pb-24 px-6 md:px-12 max-w-screen-2xl mx-auto space-y-12">
+    {% set display_name = exercise.name.replace('Baduanjin - ', '') if exercise else 'Holding the Sky' %}
+    {% set duration_min = ((exercise.get('duration_sec', 0) / 60.0) | round(0, 'ceil')) | int if exercise and exercise.get('duration_sec') else 2 %}
+    <section class="grid lg:grid-cols-2 gap-12 items-end">
+      <div class="space-y-6">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-950 text-xs font-bold tracking-widest uppercase">{{ tt('Guided Movement', '引导动作') }}</div>
+        <h1 class="text-5xl md:text-7xl font-extrabold text-emerald-950 leading-[0.95] tracking-tight">{{ exercise.name if exercise else display_name }}</h1>
+        <p class="text-xl md:text-2xl text-slate-600 font-semibold leading-relaxed">
+          {{ tt('Use this page to understand the purpose, focus area, and breathing rhythm before starting the live training session.', '在开始实时训练前，用这一页先了解动作目的、关注部位和呼吸节奏。') }}
+        </p>
+        <div class="flex flex-wrap gap-4 pt-2">
+          <a href="{{ url_for('start_training', exercise_id=exercise['id'], focus=exercise['focus'] if exercise and exercise.get('focus') else 'full_body', mode='a') }}" class="bg-emerald-950 text-white px-10 py-4 rounded-full font-bold text-sm tracking-widest uppercase flex items-center gap-3 page-link">{{ tt('Start A Layout', '进入 A 布局') }}<span class="material-symbols-outlined">play_arrow</span></a>
+          <a href="{{ url_for('start_training', exercise_id=exercise['id'], focus=exercise['focus'] if exercise and exercise.get('focus') else 'full_body', mode='b') }}" class="bg-stone-100 text-emerald-950 px-10 py-4 rounded-full font-bold text-sm tracking-widest uppercase flex items-center gap-3 page-link">{{ tt('Start B Layout', '进入 B 布局') }}<span class="material-symbols-outlined">videocam</span></a>
+        </div>
+      </div>
+      <div class="rounded-[2rem] overflow-hidden shadow-sm bg-white border border-stone-200/60">
+        {% if exercise and exercise.get('image') %}
+        <img class="w-full aspect-video object-cover" src="{{ url_for('static', filename=exercise['image'].replace('static/', '')) }}" alt="{{ exercise['name'] }}">
+        {% else %}
+        <div class="w-full aspect-video bg-stone-100"></div>
+        {% endif %}
+        <div class="p-6">
+          <p class="text-xs uppercase tracking-[0.22em] text-emerald-700 font-bold mb-2">{{ tt('Preview', '动作预览') }}</p>
+          <p class="text-slate-600">{{ exercise.description if exercise and exercise.get('description') else tt('A guided traditional wellness movement.', '一个引导式的传统养生动作。') }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid md:grid-cols-2 gap-6">
+      <article class="bg-white rounded-[2rem] p-8 shadow-sm border border-stone-200/60">
+        <p class="text-xs tracking-[0.22em] uppercase text-emerald-700 font-bold mb-3">{{ tt('Layout A', 'A 布局') }}</p>
+        <h3 class="text-2xl font-extrabold text-emerald-950 mb-3">{{ tt('Classic Two-Panel View', '经典双栏视图') }}</h3>
+        <p class="text-slate-600 leading-relaxed">{{ tt('Reference video on the left and live camera on the right. Best for users who want equal attention on both panels.', '左侧是参考视频，右侧是实时摄像头。适合希望同时对照两边画面的用户。') }}</p>
+      </article>
+      <article class="bg-white rounded-[2rem] p-8 shadow-sm border border-stone-200/60">
+        <p class="text-xs tracking-[0.22em] uppercase text-emerald-700 font-bold mb-3">{{ tt('Layout B', 'B 布局') }}</p>
+        <h3 class="text-2xl font-extrabold text-emerald-950 mb-3">{{ tt('Camera-First Focus View', '摄像头优先视图') }}</h3>
+        <p class="text-slate-600 leading-relaxed">{{ tt('The camera stays large while the reference video floats smaller above it, reducing eye switching and keeping the user centered.', '用户摄像头保持为主画面，参考视频以更小的浮窗形式显示，减少来回切换视线。') }}</p>
+      </article>
+    </section>
+
+    <section class="grid lg:grid-cols-2 gap-8">
+      <article class="bg-stone-100 rounded-[2rem] p-8">
+        <h3 class="text-3xl font-extrabold text-emerald-950 mb-6">{{ tt('Focus Areas', '关注部位') }}</h3>
+        <div class="grid grid-cols-2 gap-4 text-sm font-semibold text-emerald-950">
+          {% for part in exercise.target_parts if exercise and exercise.get('target_parts') %}
+          <div class="bg-white rounded-2xl px-4 py-4">{{ part.replace('_', ' ').title() }}</div>
+          {% endfor %}
+        </div>
+      </article>
+      <article class="bg-emerald-950 text-white rounded-[2rem] p-8">
+        <h3 class="text-3xl font-extrabold mb-6">{{ tt('Breathing Guidance', '呼吸引导') }}</h3>
+        <div class="space-y-6">
+          <div><p class="text-xs uppercase tracking-[0.2em] text-amber-200 font-bold mb-2">{{ tt('Inhale', '吸气') }}</p><p class="text-white/85">{{ tt('As the body opens, rises, or expands into the main posture.', '当身体打开、上提或进入主要动作时吸气。') }}</p></div>
+          <div><p class="text-xs uppercase tracking-[0.2em] text-white/60 font-bold mb-2">{{ tt('Exhale', '呼气') }}</p><p class="text-white/85">{{ tt('As the arms lower, the trunk returns, or the body settles back to neutral.', '当手臂回落、躯干回正或身体回到中性状态时呼气。') }}</p></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="text-center bg-white rounded-[3rem] p-16 shadow-sm">
+      <h2 class="text-5xl font-extrabold text-emerald-950 mb-6">{{ tt('Ready to Practice?', '准备开始练习了吗？') }}</h2>
+      <p class="text-lg text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">{{ tt('Start the guided session for', '开始以下动作的引导式训练：') }} <strong>{{ display_name }}</strong>。</p>
+      <div class="flex flex-col md:flex-row justify-center gap-4">
+        <a href="{{ url_for('start_training', exercise_id=exercise['id'], focus=exercise['focus'] if exercise and exercise.get('focus') else 'full_body', mode='a') }}" class="bg-emerald-950 text-white px-12 py-6 rounded-full font-bold text-lg tracking-widest uppercase page-link">{{ tt('Start A Session', '开始 A 模式') }}</a>
+        <a href="{{ url_for('start_training', exercise_id=exercise['id'], focus=exercise['focus'] if exercise and exercise.get('focus') else 'full_body', mode='b') }}" class="bg-stone-100 text-emerald-950 px-12 py-6 rounded-full font-bold text-lg tracking-widest uppercase page-link">{{ tt('Start B Session', '开始 B 模式') }}</a>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    document.querySelectorAll('.page-link').forEach(link => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        window.location.href = link.href;
+      });
+    });
+  </script>
+</body>
+</html>

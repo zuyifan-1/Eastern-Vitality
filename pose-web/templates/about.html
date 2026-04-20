@@ -1,0 +1,79 @@
+﻿<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>{{ t('nav_about') }} | Eastern Vitality</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <style>body { font-family: "Manrope", sans-serif; background: #F7F6F2; }</style>
+</head>
+<body class="text-slate-900 selection:bg-emerald-950 selection:text-white">
+  <nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md shadow-sm">
+    <div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto gap-4">
+      <a href="{{ url_for('home') }}" class="text-2xl font-bold tracking-tight text-emerald-950">Eastern Vitality</a>
+      <div class="hidden md:flex items-center gap-10 text-sm tracking-wide uppercase font-semibold">
+        <a class="text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('home') }}">{{ t('nav_home') }}</a>
+        <a class="text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('selection') }}">{{ t('nav_exercises') }}</a>
+        <a class="text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('records') }}">{{ t('nav_records') }}</a>
+        <a class="text-emerald-900 border-b-2 border-emerald-900 pb-1" href="{{ url_for('about') }}">{{ t('nav_about') }}</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="{{ url_for('set_language', lang='en', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-emerald-950 text-white' if current_lang == 'en' else 'bg-stone-100 text-emerald-950' }}">EN</a>
+        <a href="{{ url_for('set_language', lang='zh', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-emerald-950 text-white' if current_lang == 'zh' else 'bg-stone-100 text-emerald-950' }}">{{ t('lang_zh') }}</a>
+        <a href="{{ url_for('selection') }}" class="inline-block bg-emerald-950 text-white px-8 py-2.5 rounded-full text-sm tracking-widest uppercase font-semibold">{{ tt('Start Practice', '开始练习') }}</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="pt-32 pb-24 px-6 md:px-12 max-w-screen-2xl mx-auto space-y-16">
+    <section class="grid lg:grid-cols-2 gap-12 items-center">
+      <div class="space-y-6">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-950 text-xs font-bold tracking-widest uppercase">{{ tt('Platform Overview', '平台简介') }}</div>
+        <h1 class="text-5xl md:text-7xl font-extrabold text-emerald-950 leading-[0.95] tracking-tight">{{ tt('Ancient Practice, Modern Guidance', '古法练习，现代引导') }}</h1>
+        <p class="text-xl md:text-2xl text-slate-600 font-semibold max-w-2xl leading-relaxed">{{ tt('Eastern Vitality turns Baduanjin into a guided digital experience with real-time pose tracking, calm visual feedback, and records that stay readable instead of overwhelming.', 'Eastern Vitality 把八段锦变成一种可引导的数字化体验，通过实时姿态追踪、克制的视觉反馈和清晰可读的训练记录，帮助用户更轻松地坚持练习。') }}</p>
+      </div>
+      <div class="rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(23,48,33,0.14)] min-h-[460px] relative">
+        <img class="absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=1600&auto=format&fit=crop" alt="practice">
+        <div class="absolute inset-0 bg-gradient-to-t from-emerald-950/70 via-emerald-950/20 to-transparent"></div>
+        <div class="absolute bottom-0 p-8 text-white">
+          <p class="text-[10px] uppercase tracking-[0.22em] font-bold text-white/70 mb-2">{{ tt('Experience Design', '体验设计') }}</p>
+          <h2 class="text-2xl md:text-3xl font-extrabold leading-tight mb-3">{{ tt('A softer interface for focused movement', '更柔和的界面，帮助用户专注动作') }}</h2>
+          <p class="text-white/85 leading-relaxed">{{ tt('Instead of gym-style pressure, the product emphasizes rhythm, posture, breathing, and sustainable progress.', '它不强调健身房式的压力，而是更重视节奏、姿态、呼吸和可持续的进步。') }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid lg:grid-cols-2 gap-8">
+      <div class="bg-white rounded-[2rem] p-10 shadow-sm">
+        <h3 class="text-3xl font-bold text-emerald-950 mb-6">{{ tt('Why this platform feels different', '为什么这个平台不一样') }}</h3>
+        <div class="space-y-6 text-slate-600 leading-relaxed">
+          <p>{{ tt('The interface helps users understand what to do next without overwhelming them with dense analytics.', '界面会先帮助用户理解下一步该做什么，而不是一开始就堆满复杂数据。') }}</p>
+          <p>{{ tt('Real-time feedback is framed around alignment, rhythm, and control rather than competition.', '实时反馈围绕对齐、节奏和控制展开，而不是把练习做成竞争。') }}</p>
+          <p>{{ tt('The product keeps traditional wellness calm and approachable while still making progress measurable.', '它既保留了传统养生练习的平和感，也让进步变得可追踪。') }}</p>
+        </div>
+      </div>
+      <div class="bg-stone-100 rounded-[2rem] p-10 shadow-sm">
+        <h3 class="text-3xl font-bold text-emerald-950 mb-6">{{ tt('Core principles', '核心原则') }}</h3>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="bg-white rounded-2xl p-5"><p class="font-bold text-emerald-950 mb-2">{{ tt('Posture clarity', '姿态清晰') }}</p><p class="text-sm text-slate-600">{{ tt('Reference motion and overlays help users understand body position at a glance.', '参考动作和骨骼叠层帮助用户一眼理解自己的身体位置。') }}</p></div>
+          <div class="bg-white rounded-2xl p-5"><p class="font-bold text-emerald-950 mb-2">{{ tt('Breathing rhythm', '呼吸节奏') }}</p><p class="text-sm text-slate-600">{{ tt('Movement is presented with a pace that supports calm, repeatable practice.', '动作节奏更平和，支持用户稳定重复练习。') }}</p></div>
+          <div class="bg-white rounded-2xl p-5"><p class="font-bold text-emerald-950 mb-2">{{ tt('Immediate feedback', '即时反馈') }}</p><p class="text-sm text-slate-600">{{ tt('Users can notice misalignment in real time instead of waiting until the session is over.', '用户不必等到训练结束，练习过程中就能看到偏差。') }}</p></div>
+          <div class="bg-white rounded-2xl p-5"><p class="font-bold text-emerald-950 mb-2">{{ tt('Readable records', '记录易读') }}</p><p class="text-sm text-slate-600">{{ tt('Progress stays visual and simple so improvement feels encouraging rather than clinical.', '进度展示保持清晰和直观，让成长更鼓励人，而不是过于冰冷。') }}</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="text-center bg-white rounded-[3rem] p-16 shadow-sm">
+      <h2 class="text-5xl font-extrabold text-emerald-950 mb-6">{{ tt('Ready to explore the platform?', '准备好体验这个平台了吗？') }}</h2>
+      <p class="text-lg text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">{{ tt('Move from the overview page into the exercise library, start a guided session, and review your progress in the records view.', '你可以从平台介绍进入动作库，开始一场引导式训练，再到记录页回看自己的进步。') }}</p>
+      <div class="flex flex-col md:flex-row justify-center gap-4">
+        <a href="{{ url_for('selection') }}" class="bg-emerald-950 text-white px-12 py-6 rounded-full font-bold text-lg tracking-widest uppercase">{{ tt('Open Exercise Library', '打开动作库') }}</a>
+        <a href="{{ url_for('records') }}" class="bg-stone-100 text-emerald-950 px-12 py-6 rounded-full font-bold text-lg tracking-widest uppercase">{{ tt('View Training Records', '查看训练记录') }}</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

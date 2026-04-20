@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Eastern Vitality</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <style>
+    body { font-family: "Manrope", sans-serif; background: #F7F6F2; }
+    .hero-card { box-shadow: 0 18px 50px rgba(23,48,33,0.10); }
+  </style>
+</head>
+<body class="text-slate-900 selection:bg-emerald-950 selection:text-white">
+  <nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md shadow-sm">
+    <div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto gap-4">
+      <a href="{{ url_for('home') }}" class="text-2xl font-bold tracking-tight text-emerald-950">Eastern Vitality</a>
+      <div class="hidden md:flex items-center gap-10 text-sm tracking-wide uppercase font-semibold">
+        <a class="text-emerald-900 border-b-2 border-emerald-900 pb-1" href="{{ url_for('home') }}">{{ t('nav_home') }}</a>
+        <a class="text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('selection') }}">{{ t('nav_exercises') }}</a>
+        <a class="text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('records') }}">{{ t('nav_records') }}</a>
+        <a class="text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('about') }}">{{ t('nav_about') }}</a>
+        {% if current_user and current_user['is_admin'] %}
+        <a class="text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('admin_dashboard') }}">{{ t('nav_admin') }}</a>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="{{ url_for('set_language', lang='en', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-emerald-950 text-white' if current_lang == 'en' else 'bg-surface-container-low text-emerald-950' }}">EN</a>
+        <a href="{{ url_for('set_language', lang='zh', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-emerald-950 text-white' if current_lang == 'zh' else 'bg-surface-container-low text-emerald-950' }}">{{ t('lang_zh') }}</a>
+        {% if current_user %}
+        <a href="{{ url_for('records') }}" class="inline-block bg-stone-100 text-emerald-950 px-5 py-2.5 rounded-full text-sm tracking-widest uppercase font-semibold">{{ current_user['display_name'] }}</a>
+        <a href="{{ url_for('logout') }}" class="inline-block bg-emerald-950 text-white px-6 py-2.5 rounded-full text-sm tracking-widest uppercase font-semibold">{{ t('nav_logout') }}</a>
+        {% else %}
+        <a href="{{ url_for('login') }}" class="inline-block bg-stone-100 text-emerald-950 px-6 py-2.5 rounded-full text-sm tracking-widest uppercase font-semibold">{{ t('nav_login') }}</a>
+        <a href="{{ url_for('register') }}" class="inline-block bg-emerald-950 text-white px-6 py-2.5 rounded-full text-sm tracking-widest uppercase font-semibold">{{ t('nav_register') }}</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <main class="pt-24">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <section class="max-w-screen-xl mx-auto px-8 pt-8">
+        <div class="space-y-3">
+          {% for category, message in messages %}
+          <div class="rounded-2xl px-5 py-4 text-sm font-semibold {{ 'bg-red-50 text-red-700 border border-red-200' if category == 'error' else 'bg-emerald-50 text-emerald-700 border border-emerald-200' }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+    {% endwith %}
+
+    <section class="max-w-screen-2xl mx-auto px-8 md:px-12 py-20 md:py-32 grid md:grid-cols-2 gap-16 items-center">
+      <div class="space-y-10">
+        <h1 class="text-5xl md:text-7xl font-extrabold text-emerald-950 leading-[1.08] tracking-tight">
+          {{ tt('Make traditional wellness practice', '让传统养生练习') }}
+          <span class="text-emerald-700 italic font-light">{{ tt('visible', '看得见') }}</span>,
+          {{ tt('precise, and easier to feel', '更精准，也更容易感知') }}
+        </h1>
+        <p class="text-lg md:text-xl text-slate-600 max-w-xl leading-relaxed font-light">
+          {{ tt('Bridge ancient Baduanjin wisdom with modern biometrics. Our real-time pose tracking makes subtle movement easier to understand and easier to improve.', '把古老八段锦智慧和现代动作识别结合起来。通过实时姿态追踪，用户可以更直观地理解每一个动作，让原本细微的身体感受变成更容易学习和坚持的练习体验。') }}
+        </p>
+        <div class="flex flex-wrap gap-6 pt-4">
+          <a href="{{ url_for('selection') }}" class="inline-block bg-emerald-950 text-white px-10 py-4 rounded-full text-sm tracking-widest uppercase font-bold">{{ tt('Start Practice', '开始练习') }}</a>
+          <a href="{{ url_for('about') }}" class="inline-block bg-stone-100 text-emerald-950 px-10 py-4 rounded-full text-sm tracking-widest uppercase font-bold">{{ tt('Learn About Baduanjin', '了解八段锦') }}</a>
+        </div>
+      </div>
+
+      <div class="relative">
+        <div class="rounded-[2rem] overflow-hidden bg-white hero-card">
+          <div class="flex items-center justify-between px-6 py-4 bg-[#F5F2EC] border-b border-stone-200">
+            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-200"></span><span class="w-3 h-3 rounded-full bg-yellow-200"></span><span class="w-3 h-3 rounded-full bg-green-200"></span></div>
+            <div class="text-[11px] tracking-[0.2em] uppercase text-stone-500 font-semibold">{{ tt('Session: Holding the Sky', '当前练习：双手托天') }}</div>
+          </div>
+          <div class="grid grid-cols-2">
+            <div class="relative">
+              <img alt="Reference movement" class="w-full h-[520px] object-cover" src="https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=1200&auto=format&fit=crop" />
+              <div class="absolute top-4 left-4 px-3 py-1 bg-emerald-950 text-white rounded-full text-[10px] font-bold uppercase tracking-widest">{{ tt('Reference', '范例') }}</div>
+            </div>
+            <div class="relative">
+              <img alt="Live tracking" class="w-full h-[520px] object-cover" src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1200&auto=format&fit=crop" />
+              <div class="absolute bottom-5 right-5 bg-white/90 rounded-full px-5 py-3 shadow-lg">
+                <div class="text-[11px] uppercase tracking-widest text-stone-500 font-semibold">{{ tt('Alignment', '对齐度') }}</div>
+                <div class="text-3xl font-extrabold text-emerald-950">82%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-screen-xl mx-auto px-8 py-8 grid md:grid-cols-3 gap-6">
+      <div class="bg-white rounded-3xl p-8 shadow border border-stone-200/60"><h3 class="text-2xl font-bold text-emerald-950 mb-3">{{ tt('Real-time pose recognition', '实时姿态识别') }}</h3><p class="text-slate-600 leading-relaxed">{{ tt('Compare your live movement against guided practice and receive instant visual feedback.', '把你的实时动作和示范练习进行比对，并即时获得可视化反馈。') }}</p></div>
+      <div class="bg-white rounded-3xl p-8 shadow border border-stone-200/60"><h3 class="text-2xl font-bold text-emerald-950 mb-3">{{ tt('Body-part focused guidance', '按身体部位聚焦指导') }}</h3><p class="text-slate-600 leading-relaxed">{{ tt('Understand which body area a movement trains and where your posture needs refinement.', '帮助用户理解动作主要训练哪个部位，以及当前姿态需要优化的地方。') }}</p></div>
+      <div class="bg-white rounded-3xl p-8 shadow border border-stone-200/60"><h3 class="text-2xl font-bold text-emerald-950 mb-3">{{ tt('Practice result feedback', '训练结果反馈') }}</h3><p class="text-slate-600 leading-relaxed">{{ tt('Review your session score, common issues, and next-step suggestions after practice.', '练习结束后查看分数、常见问题和下一步建议。') }}</p></div>
+    </section>
+
+    <section class="max-w-screen-xl mx-auto px-8 py-20">
+      <div class="text-center mb-12">
+        <p class="text-xs tracking-[0.22em] uppercase text-emerald-700 font-bold mb-4">{{ tt("Who it's for", '适合谁使用') }}</p>
+        <h2 class="text-4xl md:text-5xl font-extrabold text-emerald-950">{{ tt('Designed for everyday wellness', '为日常养生而设计') }}</h2>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-3xl p-8 border border-stone-200/60"><h3 class="text-2xl font-bold text-emerald-950 mb-3">{{ tt('Sedentary users', '久坐人群') }}</h3><p class="text-slate-600">{{ tt('Gentle guided movement for people with shoulder, neck, and back stiffness.', '适合肩颈背僵硬、希望通过温和动作改善状态的人。') }}</p></div>
+        <div class="bg-white rounded-3xl p-8 border border-stone-200/60"><h3 class="text-2xl font-bold text-emerald-950 mb-3">{{ tt('Health-conscious people', '关注健康的人') }}</h3><p class="text-slate-600">{{ tt('A calmer alternative to performance-focused apps, with more body awareness and less pressure.', '相比强调表现的训练应用，这里更强调身体觉察，也更少压力感。') }}</p></div>
+        <div class="bg-white rounded-3xl p-8 border border-stone-200/60"><h3 class="text-2xl font-bold text-emerald-950 mb-3">{{ tt('Traditional wellness beginners', '传统养生初学者') }}</h3><p class="text-slate-600">{{ tt('Learn Baduanjin with visual guidance, feedback, and a clearer sense of what correct movement feels like.', '通过可视化引导和反馈学习八段锦，更清楚地理解正确动作应该是什么感觉。') }}</p></div>
+      </div>
+    </section>
+
+    <section class="max-w-screen-xl mx-auto px-8 py-20">
+      <div class="text-center mb-12">
+        <p class="text-xs tracking-[0.22em] uppercase text-emerald-700 font-bold mb-4">{{ tt('How it works', '使用流程') }}</p>
+        <h2 class="text-4xl md:text-5xl font-extrabold text-emerald-950">{{ tt('A guided practice flow', '一条清晰的引导式练习路径') }}</h2>
+      </div>
+      <div class="grid md:grid-cols-4 gap-6">
+        <div class="bg-white rounded-3xl p-8 shadow border border-stone-200/60"><div class="text-5xl font-extrabold text-emerald-950/20 mb-4">01</div><h3 class="text-xl font-bold text-emerald-950 mb-2">{{ tt('Choose an exercise', '选择动作') }}</h3><p class="text-slate-600">{{ tt('Browse movements by body area, duration, or practice type.', '按身体部位、练习时长或类别来浏览动作。') }}</p></div>
+        <div class="bg-white rounded-3xl p-8 shadow border border-stone-200/60"><div class="text-5xl font-extrabold text-emerald-950/20 mb-4">02</div><h3 class="text-xl font-bold text-emerald-950 mb-2">{{ tt('Follow the guidance', '跟随引导') }}</h3><p class="text-slate-600">{{ tt('Watch the reference movement and align your posture step by step.', '观看范例动作，并一步步调整自己的姿态。') }}</p></div>
+        <div class="bg-white rounded-3xl p-8 shadow border border-stone-200/60"><div class="text-5xl font-extrabold text-emerald-950/20 mb-4">03</div><h3 class="text-xl font-bold text-emerald-950 mb-2">{{ tt('Receive feedback', '获得反馈') }}</h3><p class="text-slate-600">{{ tt('Get live scoring and simple prompts on how to adjust your movement.', '获得实时评分和简洁的动作调整提示。') }}</p></div>
+        <div class="bg-white rounded-3xl p-8 shadow border border-stone-200/60"><div class="text-5xl font-extrabold text-emerald-950/20 mb-4">04</div><h3 class="text-xl font-bold text-emerald-950 mb-2">{{ tt('Improve gradually', '持续进步') }}</h3><p class="text-slate-600">{{ tt('Review results and build a more stable daily wellness habit over time.', '回顾训练结果，逐渐建立稳定的日常养生习惯。') }}</p></div>
+      </div>
+    </section>
+
+    <section class="max-w-screen-xl mx-auto px-8 mb-20">
+      <div class="bg-emerald-950 rounded-[2rem] p-16 md:p-24 text-center relative overflow-hidden">
+        <h2 class="text-4xl md:text-6xl font-extrabold text-white mb-8">{{ tt('Cultivate your inner vitality today', '从今天开始培养你的内在活力') }}</h2>
+        <p class="text-emerald-100 text-lg mb-12 max-w-xl mx-auto">{{ tt('Bring traditional wellness practice into everyday life with clearer guidance and more visible feedback.', '用更清晰的引导和更可见的反馈，把传统养生练习带回日常生活。') }}</p>
+        <div class="flex flex-col sm:flex-row justify-center gap-6">
+          <a href="{{ url_for('selection') }}" class="inline-block bg-white text-emerald-950 px-12 py-5 rounded-full text-sm tracking-widest uppercase font-bold">{{ tt('Start Practice', '开始练习') }}</a>
+          <a href="{{ url_for('selection') }}" class="inline-block bg-emerald-800 text-white px-12 py-5 rounded-full text-sm tracking-widest uppercase font-bold">{{ tt('Explore Exercises', '浏览动作库') }}</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

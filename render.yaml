@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: pose-live
+    runtime: python
+    rootDir: pose-web
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -c gunicorn.conf.py wsgi:app
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: SESSION_COOKIE_SECURE
+        value: "1"
+      - key: USE_PROXY_FIX
+        value: "1"
+      - key: DATABASE_PATH
+        value: /opt/render/project/src/pose-web/instance/app.db
+      - key: SECRET_KEY
+        sync: false
+      - key: TRUSTED_HOSTS
+        sync: false

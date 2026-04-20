@@ -1,0 +1,362 @@
+﻿<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ tt('Exercise Selection', '动作选择') }} | Eastern Vitality</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#173021",
+            secondary: "#5D7A65",
+            background: "#F7F6F2",
+            surface: "#FFFFFF",
+            "surface-container-low": "#F4F2EC",
+            "surface-container-lowest": "#FFFFFF",
+            "surface-container-high": "#ECE8DF",
+            "on-surface": "#1B1B1B",
+            "on-surface-variant": "#5F5A55",
+            outline: "#A8A29E",
+            "outline-variant": "#D6D1CA",
+            "primary-container": "#2E4A38",
+            "primary-fixed-dim": "#D7E6D6",
+            "tertiary-fixed": "#F2EDE4",
+            "tertiary-fixed-dim": "#DCCFB4",
+            "on-primary": "#FFFFFF",
+            "secondary-container": "#DCE8DE"
+          },
+          fontFamily: {
+            manrope: ["Manrope", "sans-serif"]
+          },
+          boxShadow: {
+            soft: "0 10px 30px rgba(23,48,33,0.08)"
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: "Manrope", sans-serif; background: #F7F6F2; transition: opacity 220ms ease, transform 220ms ease; }
+    body.page-exit { opacity: 0; transform: translateY(10px); }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .focus-card-active { border-color: rgba(23, 48, 33, 0.28) !important; background: #F7FBF8 !important; box-shadow: 0 10px 24px rgba(23,48,33,0.08); transform: translateY(-2px); }
+    .hotspot-active { transform: scale(1.18); box-shadow: 0 0 0 8px rgba(23,48,33,0.14), 0 10px 20px rgba(0,0,0,0.08); }
+    .hotspot-btn { transition: all 0.25s ease; cursor: pointer; }
+    .hotspot-btn:hover { transform: scale(1.12); }
+    .exercise-hidden { display: none !important; }
+  </style>
+</head>
+<body class="text-on-surface selection:bg-primary selection:text-white">
+  <nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md shadow-sm transition-colors duration-300">
+    <div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto">
+      <a href="{{ url_for('home') }}" class="text-2xl font-bold tracking-tight text-emerald-950">Eastern Vitality</a>
+      <div class="hidden md:flex items-center gap-10">
+        <a class="text-sm tracking-wide uppercase font-semibold text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('home') }}">{{ t('nav_home') }}</a>
+        <a class="text-sm tracking-wide uppercase font-semibold text-emerald-900 border-b-2 border-emerald-900 pb-1" href="{{ url_for('selection') }}">{{ t('nav_exercises') }}</a>
+        <a class="text-sm tracking-wide uppercase font-semibold text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('records') }}">{{ t('nav_records') }}</a>
+        <a class="text-sm tracking-wide uppercase font-semibold text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('about') }}">{{ t('nav_about') }}</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="{{ url_for('set_language', lang='en', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-primary text-white' if current_lang == 'en' else 'bg-surface-container-low text-primary' }}">EN</a>
+        <a href="{{ url_for('set_language', lang='zh', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-primary text-white' if current_lang == 'zh' else 'bg-surface-container-low text-primary' }}">{{ t('lang_zh') }}</a>
+        <a href="{{ url_for('logout') }}" class="inline-block bg-primary text-on-primary px-8 py-2.5 rounded-full text-sm tracking-widest uppercase font-semibold hover:bg-primary-container transition-all active:scale-95 duration-200">{{ t('nav_logout') }}</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="pt-32 px-6 md:px-12 max-w-screen-2xl mx-auto">
+    <header class="mb-16 max-w-4xl">
+      <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-primary mb-6 leading-[1.05]">{{ tt('Choose Your Practice', '选择你的练习') }}</h1>
+      <p class="text-xl md:text-2xl text-secondary leading-relaxed font-light max-w-3xl">
+        {{ tt('Find the most suitable traditional wellness movement based on your body focus, practice time, and current physical needs.', '根据你的身体关注部位、可练习时长和当前状态，找到最合适的传统养生动作。') }}
+      </p>
+    </header>
+
+    <section class="mb-20">
+      <div class="bg-surface-container-low rounded-[2rem] p-6 flex flex-wrap items-center gap-4 md:gap-8">
+        <div class="flex flex-col gap-2 min-w-[160px]">
+          <span class="text-[10px] uppercase tracking-[0.22em] text-outline font-bold">{{ tt('Body Area', '身体部位') }}</span>
+          <select id="filter-body-area" class="bg-transparent border-none focus:ring-0 font-semibold text-primary p-0">
+            <option value="all">{{ tt('Full Body', '全身') }}</option>
+            <option value="shoulders">{{ tt('Shoulders', '肩部') }}</option>
+            <option value="neck">{{ tt('Neck', '颈部') }}</option>
+            <option value="spine">{{ tt('Back & Spine', '背部与脊柱') }}</option>
+            <option value="waist">{{ tt('Waist & Kidney', '腰部与肾区') }}</option>
+            <option value="lower_limbs">{{ tt('Lower Limbs', '下肢') }}</option>
+          </select>
+        </div>
+        <div class="w-px h-10 bg-outline-variant/30 hidden md:block"></div>
+        <div class="flex flex-col gap-2 min-w-[140px]">
+          <span class="text-[10px] uppercase tracking-[0.22em] text-outline font-bold">{{ tt('Difficulty', '难度') }}</span>
+          <select id="filter-difficulty" class="bg-transparent border-none focus:ring-0 font-semibold text-primary p-0">
+            <option value="all">{{ tt('All Levels', '全部难度') }}</option>
+            <option value="beginner">{{ tt('Beginner', '初级') }}</option>
+            <option value="intermediate">{{ tt('Intermediate', '中级') }}</option>
+          </select>
+        </div>
+        <div class="w-px h-10 bg-outline-variant/30 hidden md:block"></div>
+        <div class="flex flex-col gap-2 min-w-[140px]">
+          <span class="text-[10px] uppercase tracking-[0.22em] text-outline font-bold">{{ tt('Duration', '时长') }}</span>
+          <select id="filter-duration" class="bg-transparent border-none focus:ring-0 font-semibold text-primary p-0">
+            <option value="all">{{ tt('Any Duration', '任意时长') }}</option>
+            <option value="1">{{ tt('1 min', '1 分钟') }}</option>
+            <option value="2">{{ tt('2 min', '2 分钟') }}</option>
+            <option value="3">{{ tt('3 min', '3 分钟') }}</option>
+            <option value="4">{{ tt('4 min', '4 分钟') }}</option>
+            <option value="5">{{ tt('5 min', '5 分钟') }}</option>
+          </select>
+        </div>
+        <div class="w-px h-10 bg-outline-variant/30 hidden md:block"></div>
+        <div class="flex flex-col gap-2 min-w-[160px]">
+          <span class="text-[10px] uppercase tracking-[0.22em] text-outline font-bold">{{ tt('Category', '类别') }}</span>
+          <select id="filter-category" class="bg-transparent border-none focus:ring-0 font-semibold text-primary p-0">
+            <option value="all">{{ tt('All Categories', '全部类别') }}</option>
+            <option value="classic_eight">{{ tt('Classic Eight', '八段锦') }}</option>
+          </select>
+        </div>
+        <button id="filter-search-btn" class="ml-auto bg-primary text-on-primary w-12 h-12 rounded-full flex items-center justify-center hover:opacity-90 transition-opacity">
+          <span class="material-symbols-outlined">search</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="mb-28 bg-surface-container-low rounded-[3rem] p-10 md:p-14 lg:p-20 overflow-hidden relative">
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <div class="space-y-8 relative z-10">
+          <div class="space-y-3">
+            <span class="text-[#D8B46A] font-bold uppercase tracking-[0.24em] text-xs">{{ tt('Precision Targeting', '精准定位') }}</span>
+            <h2 class="text-4xl md:text-5xl font-extrabold text-primary">{{ tt('Map Your Practice', '定位你的练习') }}</h2>
+            <p class="text-on-surface-variant leading-relaxed text-lg max-w-xl">{{ tt('Select a focus area to explore movements tailored to different parts of the body.', '选择你重点关注的身体区域，查看更适合该部位的练习动作。') }}</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button type="button" class="focus-card flex items-center gap-4 p-5 rounded-2xl bg-white border border-transparent hover:border-primary/20 hover:shadow-md transition-all text-left" data-focus="shoulders">
+              <div class="w-11 h-11 rounded-full bg-[#DCE8DE] flex items-center justify-center text-primary"><span class="material-symbols-outlined text-xl">self_improvement</span></div>
+              <span class="font-bold text-primary">{{ tt('Shoulder & Neck', '肩颈') }}</span>
+            </button>
+            <button type="button" class="focus-card flex items-center gap-4 p-5 rounded-2xl bg-white border border-transparent hover:border-primary/20 hover:shadow-md transition-all text-left" data-focus="spine">
+              <div class="w-11 h-11 rounded-full bg-[#DCE8DE] flex items-center justify-center text-primary"><span class="material-symbols-outlined text-xl">accessibility_new</span></div>
+              <span class="font-bold text-primary">{{ tt('Spine & Back', '脊柱与背部') }}</span>
+            </button>
+            <button type="button" class="focus-card flex items-center gap-4 p-5 rounded-2xl bg-white border border-transparent hover:border-primary/20 hover:shadow-md transition-all text-left" data-focus="waist">
+              <div class="w-11 h-11 rounded-full bg-[#F2E7C9] flex items-center justify-center text-primary"><span class="material-symbols-outlined text-xl">vital_signs</span></div>
+              <span class="font-bold text-primary">{{ tt('Waist & Kidney', '腰部与肾区') }}</span>
+            </button>
+            <button type="button" class="focus-card flex items-center gap-4 p-5 rounded-2xl bg-white border border-transparent hover:border-primary/20 hover:shadow-md transition-all text-left" data-focus="lower_limbs">
+              <div class="w-11 h-11 rounded-full bg-[#DCE8DE] flex items-center justify-center text-primary"><span class="material-symbols-outlined text-xl">directions_walk</span></div>
+              <span class="font-bold text-primary">{{ tt('Lower Limbs', '下肢') }}</span>
+            </button>
+          </div>
+        </div>
+        <div class="relative flex justify-center py-10">
+          <div class="relative w-full max-w-sm aspect-[2/3] flex items-center justify-center">
+            <svg class="w-full h-full text-[#D9DDD8]" fill="none" viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg">
+              <path d="M50 10C53.3137 10 56 12.6863 56 16C56 19.3137 53.3137 22 50 22C46.6863 22 44 19.3137 44 16C44 12.6863 46.6863 10 50 10Z" fill="currentColor"></path>
+              <path d="M30 40C30 35 35 30 50 30C65 30 70 35 70 40V70H30V40Z" fill="currentColor"></path>
+              <path d="M30 72H48V100H32L30 140H45L48 102V140H62L65 102L68 140H83L81 100H65V72H83V40C83 38 82 36 80 35L72 40V70H68V40L50 35L32 40V70H28V40L20 35C18 36 17 38 17 40V70H30V72Z" fill="currentColor"></path>
+            </svg>
+            <button type="button" class="hotspot-btn absolute top-[18%] left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-[#173021] border-[5px] border-white shadow-[0_0_0_8px_rgba(23,48,33,0.12)]" data-focus="shoulders" title="{{ tt('Shoulder & Neck', '肩颈') }}"></button>
+            <button type="button" class="hotspot-btn absolute top-[36%] left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-[#6B8B74] border-[5px] border-white shadow-[0_0_0_8px_rgba(107,139,116,0.14)]" data-focus="spine" title="{{ tt('Spine & Back', '脊柱与背部') }}"></button>
+            <button type="button" class="hotspot-btn absolute top-[56%] left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-[#8D6A2C] border-[5px] border-white shadow-[0_0_0_8px_rgba(141,106,44,0.14)]" data-focus="waist" title="{{ tt('Waist & Kidney', '腰部与肾区') }}"></button>
+            <button type="button" class="hotspot-btn absolute top-[82%] left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-[#CFE0D0] border-[5px] border-white shadow-[0_0_0_8px_rgba(207,224,208,0.55)]" data-focus="lower_limbs" title="{{ tt('Lower Limbs', '下肢') }}"></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {% set subtitle_map = {
+      'shoulders': tt('Shoulders', '肩部'),
+      'neck': tt('Neck & Upper Back', '颈部与上背'),
+      'spine': tt('Spine & Back', '脊柱与背部'),
+      'waist': tt('Waist & Core', '腰腹核心'),
+      'lower_limbs': tt('Lower Limbs', '下肢'),
+      'full_body': tt('Full Body', '全身')
+    } %}
+
+    <section class="mb-32">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
+        <div>
+          <p class="text-xs tracking-[0.22em] uppercase text-secondary font-bold mb-4">{{ tt('Practice Preview', '练习预览') }}</p>
+          <h2 class="text-4xl md:text-6xl font-extrabold text-primary mb-2">{{ tt('The Eight Silken Pieces', '八段锦') }}</h2>
+          <p class="text-on-surface-variant max-w-2xl text-lg">{{ tt('Explore the complete Baduanjin sequence through eight guided movement cards.', '通过八个引导动作卡片，浏览完整的八段锦练习序列。') }}</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="baduanjin-prev" class="w-12 h-12 rounded-full border border-primary text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all"><span class="material-symbols-outlined">chevron_left</span></button>
+          <button id="baduanjin-next" class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-container transition-all"><span class="material-symbols-outlined">chevron_right</span></button>
+        </div>
+      </div>
+
+      <div class="relative">
+        <div id="baduanjin-slider" class="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 no-scrollbar">
+          {% for exercise in exercises %}
+          {% set duration_min = ((exercise.get('duration_sec', 0) / 60.0) | round(0, 'ceil')) | int %}
+          {% set display_name = exercise.name.replace('Baduanjin - ', '') %}
+          {% set body_area = exercise.focus if exercise.get('focus') else 'full_body' %}
+          <div class="exercise-card min-w-[320px] md:min-w-[360px] bg-white rounded-[2rem] overflow-hidden border border-outline-variant/20 shadow-soft snap-start flex-shrink-0"
+               data-body-area="{{ body_area }}"
+               data-difficulty="{{ exercise.difficulty|lower }}"
+               data-duration="{{ duration_min }}"
+               data-category="classic_eight">
+            <div class="relative h-64 bg-[#DCE4DE]">
+              {% if exercise.get('image') %}
+              <img class="w-full h-full object-cover" src="{{ url_for('static', filename=exercise['image'].replace('static/', '')) }}" alt="{{ display_name }}">
+              {% else %}
+              <div class="w-full h-full bg-[#DCE4DE]"></div>
+              {% endif %}
+              <div class="absolute top-4 left-4 px-3 py-1 bg-primary text-white rounded-full text-[10px] font-bold uppercase tracking-widest">{{ loop.index }}</div>
+            </div>
+            <div class="p-8">
+              <h3 class="text-2xl font-bold text-primary mb-2">{{ display_name }}</h3>
+              <p class="text-xs font-semibold text-secondary uppercase tracking-wider mb-4">{{ subtitle_map.get(body_area, tt('Full Body', '全身')) }}</p>
+              <div class="flex gap-4 text-[10px] text-on-surface-variant font-medium uppercase tracking-tighter mb-8">
+                <span>{{ tt(exercise.difficulty, exercise.difficulty == 'Beginner' and '初级' or '中级') }}</span>
+                <span class="text-outline">|</span>
+                <span>{{ duration_min }} {{ tt('Minute' if duration_min == 1 else 'Minutes', '分钟') }}</span>
+              </div>
+              <a href="{{ url_for('exercise_detail', exercise_id=exercise['id']) }}" class="page-link block w-full text-center py-4 rounded-full border border-primary text-primary font-bold text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-all">{{ tt('View Details', '查看详情') }}</a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div id="empty-state" class="hidden mt-8 bg-white rounded-3xl p-10 border border-outline-variant/20 text-center">
+        <h3 class="text-2xl font-bold text-primary mb-3">{{ tt('No matching practice found', '没有匹配的练习') }}</h3>
+        <p class="text-on-surface-variant">{{ tt('Try changing body area, level, duration, or category.', '试试调整身体部位、难度、时长或类别筛选。') }}</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="w-full rounded-t-[3rem] mt-20 bg-stone-50">
+    <div class="flex flex-col md:flex-row justify-between items-center w-full px-12 py-16 max-w-screen-2xl mx-auto gap-8">
+      <div class="flex flex-col items-center md:items-start">
+        <div class="font-manrope font-bold text-emerald-950 text-xl mb-2">Eastern Vitality</div>
+        <div class="font-manrope text-xs tracking-wider leading-relaxed text-stone-500 max-w-xs text-center md:text-left">{{ tt('© 2024 Eastern Vitality. Ancient Wisdom, Modern Precision.', '© 2024 Eastern Vitality. 传统智慧，现代精度。') }}</div>
+      </div>
+      <div class="flex flex-wrap justify-center gap-x-10 gap-y-4">
+        <a class="font-manrope text-xs tracking-wider leading-relaxed text-stone-500 hover:text-emerald-700 transition-colors opacity-80 hover:opacity-100" href="{{ url_for('about') }}">{{ tt('Project Statement', '项目说明') }}</a>
+        <span class="font-manrope text-xs tracking-wider leading-relaxed text-stone-400">{{ tt('Privacy Policy', '隐私政策') }}</span>
+        <span class="font-manrope text-xs tracking-wider leading-relaxed text-stone-400">{{ tt('Terms of Service', '服务条款') }}</span>
+        <span class="font-manrope text-xs tracking-wider leading-relaxed text-stone-400">{{ tt('Disclaimer', '免责声明') }}</span>
+      </div>
+      <div class="flex gap-6">
+        <span class="material-symbols-outlined text-stone-400">language</span>
+        <span class="material-symbols-outlined text-stone-400">settings</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const bodyAreaSelect = document.getElementById('filter-body-area');
+    const difficultySelect = document.getElementById('filter-difficulty');
+    const durationSelect = document.getElementById('filter-duration');
+    const categorySelect = document.getElementById('filter-category');
+    const searchBtn = document.getElementById('filter-search-btn');
+    const exerciseCards = document.querySelectorAll('.exercise-card');
+    const hotspotButtons = document.querySelectorAll('.hotspot-btn');
+    const focusCards = document.querySelectorAll('.focus-card');
+    const emptyState = document.getElementById('empty-state');
+
+    function goWithFade(url) {
+      document.body.classList.add('page-exit');
+      window.setTimeout(() => { window.location.href = url; }, 220);
+    }
+
+    document.querySelectorAll('.page-link').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        goWithFade(link.href);
+      });
+    });
+
+    function clearActiveStates() {
+      hotspotButtons.forEach((btn) => btn.classList.remove('hotspot-active'));
+      focusCards.forEach((card) => card.classList.remove('focus-card-active'));
+    }
+
+    function setActiveFocus(focusValue) {
+      clearActiveStates();
+      if ([...bodyAreaSelect.options].some((option) => option.value === focusValue)) {
+        bodyAreaSelect.value = focusValue;
+      }
+      hotspotButtons.forEach((btn) => {
+        if (btn.dataset.focus === focusValue) btn.classList.add('hotspot-active');
+      });
+      focusCards.forEach((card) => {
+        if (card.dataset.focus === focusValue) card.classList.add('focus-card-active');
+      });
+    }
+
+    function filterExercises() {
+      const bodyArea = bodyAreaSelect.value;
+      const difficulty = difficultySelect.value;
+      const duration = durationSelect.value;
+      const category = categorySelect.value;
+      let visibleCount = 0;
+
+      exerciseCards.forEach((card) => {
+        const cardBody = card.dataset.bodyArea;
+        const cardDifficulty = card.dataset.difficulty;
+        const cardDuration = card.dataset.duration;
+        const cardCategory = card.dataset.category;
+
+        const matchBody = bodyArea === 'all' || cardBody === bodyArea || (bodyArea === 'shoulders' && cardBody === 'neck');
+        const matchDifficulty = difficulty === 'all' || cardDifficulty === difficulty;
+        const matchDuration = duration === 'all' || cardDuration === duration;
+        const matchCategory = category === 'all' || cardCategory === category;
+
+        if (matchBody && matchDifficulty && matchDuration && matchCategory) {
+          card.classList.remove('exercise-hidden');
+          visibleCount += 1;
+        } else {
+          card.classList.add('exercise-hidden');
+        }
+      });
+
+      emptyState.classList.toggle('hidden', visibleCount !== 0);
+    }
+
+    hotspotButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        setActiveFocus(btn.dataset.focus);
+        filterExercises();
+      });
+    });
+
+    focusCards.forEach((card) => {
+      card.addEventListener('click', () => {
+        setActiveFocus(card.dataset.focus);
+        filterExercises();
+      });
+    });
+
+    bodyAreaSelect.addEventListener('change', () => {
+      clearActiveStates();
+      filterExercises();
+    });
+    difficultySelect.addEventListener('change', filterExercises);
+    durationSelect.addEventListener('change', filterExercises);
+    categorySelect.addEventListener('change', filterExercises);
+    searchBtn.addEventListener('click', filterExercises);
+
+    const slider = document.getElementById('baduanjin-slider');
+    const prevBtn = document.getElementById('baduanjin-prev');
+    const nextBtn = document.getElementById('baduanjin-next');
+
+    if (slider && prevBtn && nextBtn) {
+      const scrollAmount = 380;
+      prevBtn.addEventListener('click', () => slider.scrollBy({ left: -scrollAmount, behavior: 'smooth' }));
+      nextBtn.addEventListener('click', () => slider.scrollBy({ left: scrollAmount, behavior: 'smooth' }));
+    }
+  </script>
+</body>
+</html>

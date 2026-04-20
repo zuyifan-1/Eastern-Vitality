@@ -1,0 +1,248 @@
+﻿<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>{{ tt('Training Result', '璁粌璇勫垎') }} | Eastern Vitality</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@500;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            "surface-dim": "#dbdad9",
+            "error-container": "#ffdad6",
+            "surface-tint": "#4a6453",
+            "on-secondary-fixed-variant": "#344c3d",
+            "secondary-fixed": "#cee9d5",
+            "on-error-container": "#93000a",
+            "surface-container-high": "#ECE8DF",
+            "on-primary-fixed-variant": "#334c3c",
+            "primary-container": "#2E4A38",
+            tertiary: "#392700",
+            "on-tertiary-fixed-variant": "#5d4201",
+            "outline-variant": "#D6D1CA",
+            "on-surface": "#1B1B1B",
+            "inverse-on-surface": "#f2f0f0",
+            secondary: "#5D7A65",
+            "surface-container-lowest": "#FFFFFF",
+            "primary-fixed": "#ccead3",
+            "on-secondary": "#ffffff",
+            "secondary-fixed-dim": "#b2cdb9",
+            primary: "#173021",
+            "primary-fixed-dim": "#D7E6D6",
+            "inverse-surface": "#303031",
+            "surface-bright": "#F7F6F2",
+            "inverse-primary": "#b1cdb8",
+            outline: "#A8A29E",
+            "tertiary-fixed": "#F2EDE4",
+            "surface-variant": "#e4e2e2",
+            "secondary-container": "#DCE8DE",
+            surface: "#FFFFFF",
+            "surface-container-low": "#F4F2EC",
+            background: "#F7F6F2",
+            "on-tertiary-fixed": "#261900",
+            error: "#ba1a1a",
+            "on-primary-container": "#97b39f",
+            "on-surface-variant": "#5F5A55",
+            "on-primary": "#ffffff",
+            "tertiary-container": "#553c00",
+            "tertiary-fixed-dim": "#DCCFB4",
+            "surface-container": "#efeded",
+            "on-secondary-fixed": "#082013",
+            "surface-container-highest": "#ECE8DF",
+            "on-secondary-container": "#4f6858",
+            "on-tertiary": "#ffffff",
+            "on-tertiary-container": "#cca75f",
+            "on-error": "#ffffff",
+            "on-primary-fixed": "#072013",
+            "on-background": "#1b1c1c"
+          },
+          fontFamily: {
+            headline: ["Manrope", "sans-serif"],
+            body: ["Manrope", "sans-serif"],
+            label: ["Inter", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: "Manrope", sans-serif; background: #F7F6F2; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .radar-grid { clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }
+  </style>
+</head>
+<body class="bg-background font-body text-on-background antialiased overflow-x-hidden">
+  {% set safe_result = result or {
+    'exercise_name': tt('Training Session', '璁粌浼氳瘽'),
+    'score': 0,
+    'grade': '--',
+    'duration_label': '0s',
+    'focus_label': tt('Full Body', '鍏ㄨ韩'),
+    'mode': 'a',
+    'feedback_message': tt('Complete a session to unlock detailed scoring feedback.', '先完成一次训练，才能看到详细评分反馈。'),
+    'summary': 'Complete a session to unlock detailed scoring feedback.',
+    'summary_zh': '先完成一次训练，才能看到详细评分反馈。',
+    'main_issue': 'Shoulders',
+    'dimensions': [
+      {'label': 'Spine', 'value': 0},
+      {'label': 'Breathing', 'value': 0},
+      {'label': 'Hips', 'value': 0},
+      {'label': 'Stability', 'value': 0},
+      {'label': 'Shoulders', 'value': 0}
+    ]
+  } %}
+  <nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md shadow-sm transition-colors duration-300">
+    <div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto">
+      <a href="{{ url_for('home') }}" class="text-2xl font-bold tracking-tight text-emerald-950">Eastern Vitality</a>
+      <div class="hidden md:flex items-center gap-10">
+        <a class="text-sm tracking-wide uppercase font-semibold text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('home') }}">{{ t('nav_home') }}</a>
+        <a class="text-sm tracking-wide uppercase font-semibold text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('selection') }}">{{ t('nav_exercises') }}</a>
+        <a class="text-sm tracking-wide uppercase font-semibold text-emerald-900 border-b-2 border-emerald-900 pb-1" href="{{ url_for('records') }}">{{ t('nav_records') }}</a>
+        <a class="text-sm tracking-wide uppercase font-semibold text-stone-500 hover:text-emerald-800 transition-all" href="{{ url_for('about') }}">{{ t('nav_about') }}</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="{{ url_for('set_language', lang='en', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-primary text-white' if current_lang == 'en' else 'bg-surface-container-low text-primary' }}">EN</a>
+        <a href="{{ url_for('set_language', lang='zh', next=request.path) }}" class="px-3 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] {{ 'bg-primary text-white' if current_lang == 'zh' else 'bg-surface-container-low text-primary' }}">{{ t('lang_zh') }}</a>
+        <a href="{{ url_for('logout') }}" class="inline-block bg-primary text-on-primary px-8 py-2.5 rounded-full text-sm tracking-widest uppercase font-semibold hover:bg-primary-container transition-all active:scale-95 duration-200">{{ t('nav_logout') }}</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-6 pt-32 pb-10 space-y-8">
+    <section class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 h-[136px] overflow-hidden">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-[0.24em] text-emerald-700 mb-3">{{ tt('Session Complete', '训练完成') }}</p>
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-emerald-950">{{ safe_result.exercise_name }}</h1>
+        <p class="mt-3 text-lg text-slate-600 max-w-3xl">{{ safe_result.summary_zh if current_lang == 'zh' else safe_result.summary }}</p>
+      </div>
+      <a href="{{ url_for('selection') }}" class="inline-flex items-center justify-center rounded-full bg-emerald-950 text-white px-6 py-3 text-sm font-bold uppercase tracking-[0.2em]">{{ t('nav_start') }}</a>
+    </section>
+
+    <section class="rounded-[2rem] bg-surface-container-low p-3 flex flex-wrap items-center gap-2">
+      <a href="{{ url_for('practice_score') }}" class="rounded-full bg-primary px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] text-on-primary">{{ tt('Scoring', '评分') }}</a>
+      <a href="{{ url_for('records') }}" class="rounded-full px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] text-secondary hover:bg-surface-container-high hover:text-primary transition-all">{{ tt('Overall Data', '整体训练数据') }}</a>
+      <a href="{{ url_for('selection') }}" class="rounded-full px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] text-secondary hover:bg-surface-container-high hover:text-primary transition-all">{{ tt('Follow', '跟随练习') }}</a>
+    </section>
+
+    <section class="grid md:grid-cols-3 gap-6">
+      <article class="bg-white rounded-[2rem] p-8 shadow-[0_18px_50px_rgba(23,48,33,0.08)]">
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-stone-400 mb-3">{{ tt('Grade', '等级') }}</p>
+        <p class="text-5xl font-extrabold text-[#DCCFB4]">{{ safe_result.grade }}</p>
+      </article>
+      <article class="bg-emerald-950 rounded-[2rem] p-8 text-white shadow-[0_18px_50px_rgba(23,48,33,0.16)]">
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-white/70 mb-3">{{ tt('Score', '得分') }}</p>
+        <p class="text-5xl font-extrabold">{{ safe_result.score }}</p>
+      </article>
+      <article class="bg-stone-100 rounded-[2rem] p-8 shadow-[0_18px_50px_rgba(23,48,33,0.08)]">
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-stone-400 mb-3">{{ tt('Duration', '时长') }}</p>
+        <p class="text-5xl font-extrabold text-emerald-950">{{ safe_result.duration_label }}</p>
+      </article>
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="md:col-span-2 lg:col-span-2 bg-surface-container-lowest p-8 md:p-10 rounded-[2rem] relative overflow-hidden">
+        <div class="relative z-10">
+          <h3 class="font-headline text-2xl font-bold text-primary mb-2">{{ tt('Scoring Breakdown', '璇勫垎鎷嗚В') }}</h3>
+          <p class="text-on-surface-variant text-sm mb-10">{{ tt('An at-a-glance view of this session before opening the full training records.', '先看本次训练评分，再决定是否进入整体训练数据页。') }}</p>
+          <div class="flex flex-col md:flex-row items-center justify-between gap-10">
+            <div class="relative w-64 h-64 flex items-center justify-center shrink-0">
+              <div class="absolute inset-0 border border-outline-variant opacity-20 radar-grid"></div>
+              <div class="absolute inset-4 border border-outline-variant opacity-20 radar-grid"></div>
+              <div class="absolute inset-8 border border-outline-variant opacity-20 radar-grid"></div>
+              <div class="absolute inset-12 border border-outline-variant opacity-20 radar-grid"></div>
+              <svg class="w-full h-full transform -rotate-18" viewBox="0 0 100 100" aria-hidden="true">
+                {% set dims = safe_result.dimensions %}
+                {% set p1 = (50, 50 - (dims[0].value * 0.4)) %}
+                {% set p2 = (50 + (dims[1].value * 0.4), 50 - (dims[1].value * 0.12)) %}
+                {% set p3 = (50 + (dims[2].value * 0.25), 50 + (dims[2].value * 0.4)) %}
+                {% set p4 = (50 - (dims[3].value * 0.25), 50 + (dims[3].value * 0.4)) %}
+                {% set p5 = (50 - (dims[4].value * 0.4), 50 - (dims[4].value * 0.12)) %}
+                <polygon fill="rgba(75, 100, 84, 0.2)" points="{{ p1[0] }},{{ p1[1] }} {{ p2[0] }},{{ p2[1] }} {{ p3[0] }},{{ p3[1] }} {{ p4[0] }},{{ p4[1] }} {{ p5[0] }},{{ p5[1] }}" stroke="#173021" stroke-width="0.8"></polygon>
+                {% for point in [p1, p2, p3, p4, p5] %}
+                <circle cx="{{ point[0] }}" cy="{{ point[1] }}" fill="#E9C176" r="1.8"></circle>
+                {% endfor %}
+              </svg>
+              <span class="absolute -top-6 text-[10px] font-bold tracking-widest uppercase">{{ tt('Spine', '鑴婃煴') }}</span>
+              <span class="absolute top-1/4 -right-12 text-[10px] font-bold tracking-widest uppercase">{{ tt('Breath', '鍛煎惛') }}</span>
+              <span class="absolute -bottom-6 right-4 text-[10px] font-bold tracking-widest uppercase">{{ tt('Hips', '楂嬮儴') }}</span>
+              <span class="absolute -bottom-6 left-2 text-[10px] font-bold tracking-widest uppercase">{{ tt('Stability', '稳定性') }}</span>
+              <span class="absolute top-1/4 -left-14 text-[10px] font-bold tracking-widest uppercase">{{ tt('Shoulders', '鑲╅儴') }}</span>
+            </div>
+            <div class="flex-1 space-y-5 w-full">
+              {% for item in safe_result.dimensions %}
+              <div class="flex justify-between items-end border-b border-surface-container pb-2">
+                <span class="text-sm font-medium">
+                  {% if item.label == 'Spine' %}{{ tt('Spine Alignment', '鑴婃煴瀵归綈') }}
+                  {% elif item.label == 'Breathing' %}{{ tt('Breathing Rhythm', '鍛煎惛鑺傚') }}
+                  {% elif item.label == 'Hips' %}{{ tt('Hip Flexibility', '髋部灵活度') }}
+                  {% elif item.label == 'Stability' %}{{ tt('Body Stability', '身体稳定性') }}
+                  {% else %}{{ tt('Shoulder Relaxation', '肩部放松度') }}{% endif %}
+                </span>
+                <span class="{{ 'text-error' if item.value < 70 else 'text-primary' }} font-bold">{{ item.value }}%</span>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        <div class="absolute top-0 right-0 w-64 h-64 bg-primary-fixed-dim/10 rounded-full blur-[100px] -mr-32 -mt-32"></div>
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <div class="bg-error-container p-8 rounded-[2rem] border-l-4 border-error">
+          <div class="flex items-center gap-3 mb-4 text-on-error-container">
+            <span class="material-symbols-outlined">warning</span>
+            <h4 class="font-headline font-bold">{{ tt('Attention Needed', '需要注意') }}</h4>
+          </div>
+          <p class="text-on-error-container text-sm leading-relaxed mb-4">
+            {{ tt('The weakest area in this round was', '鏈疆鐩稿杈冨急鐨勭淮搴︽槸') }}
+            <span class="font-bold">
+              {% if safe_result.main_issue == 'Spine' %}{{ tt('spine alignment', '鑴婃煴瀵归綈') }}
+              {% elif safe_result.main_issue == 'Breathing' %}{{ tt('breathing rhythm', '鍛煎惛鑺傚') }}
+              {% elif safe_result.main_issue == 'Hips' %}{{ tt('hip mobility', '楂嬮儴娲诲姩') }}
+              {% elif safe_result.main_issue == 'Stability' %}{{ tt('body stability', '身体稳定性') }}
+              {% else %}{{ tt('shoulder relaxation', '鑲╅儴鏀炬澗') }}{% endif %}
+            </span>.
+          </p>
+          <p class="text-on-error-container text-xs opacity-80">{{ tt('Keep the movement softer and more even on the next repetition.', '下一次重复练习时，动作可以再柔和、均匀一点。') }}</p>
+        </div>
+
+        <div class="bg-primary text-on-primary p-8 rounded-[2rem] flex-1 flex flex-col justify-between">
+          <span class="material-symbols-outlined text-tertiary-fixed-dim text-4xl" style="font-variation-settings: 'FILL' 1;">format_quote</span>
+          <div>
+            <p class="text-xl font-headline italic leading-snug mb-4">"{{ safe_result.feedback_message }}"</p>
+            <div class="flex flex-wrap gap-3 text-xs font-label tracking-widest uppercase opacity-70">
+              <span>{{ tt('Focus', '鍏虫敞') }}: {{ safe_result.focus_label }}</span>
+              <span>{{ tt('Mode', '妯″紡') }}: {{ safe_result.mode|upper }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="mt-16">
+      <h3 class="font-headline text-3xl font-bold text-primary mb-8">{{ tt('Next Step', '下一步') }}</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div class="relative h-64 rounded-[2rem] overflow-hidden group">
+          <img alt="Practice review" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=1600&auto=format&fit=crop"/>
+          <div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent flex flex-col justify-end p-8">
+            <span class="text-tertiary-fixed-dim text-xs font-label uppercase tracking-widest mb-2">{{ tt('Before Analytics', '进入整体数据前') }}</span>
+            <h4 class="text-on-primary text-2xl font-headline font-bold">{{ tt('Review This Session First', '先回看本次训练结果') }}</h4>
+            <p class="text-on-primary/80 text-sm mt-2">{{ tt('You can practice again now, or open the overall training data to compare with your history.', '你可以现在继续练习，或者进入整体训练数据查看历史对比。') }}</p>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="{{ url_for('selection') }}" class="flex-1 bg-surface-container-highest text-primary font-label text-xs tracking-widest uppercase py-6 rounded-full hover:bg-surface-container-high transition-all text-center">{{ tt('Practice Again', '再练一次') }}</a>
+          <a href="{{ url_for('records') }}" class="flex-1 bg-primary text-on-primary font-label text-xs tracking-widest uppercase py-6 rounded-full hover:opacity-90 transition-all flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-sm">insights</span>
+            {{ tt('View Overall Training Data', '鏌ョ湅鏁翠綋璁粌鏁版嵁') }}
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
