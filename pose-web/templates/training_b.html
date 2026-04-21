@@ -143,7 +143,7 @@
         <video id="reference-video" class="absolute inset-0 w-full h-full object-cover" loop playsinline preload="metadata">
           <source src="{{ url_for('static', filename=exercise.video.replace('static/', '')) }}" type="video/mp4">
         </video>
-        <img id="left-reference-skeleton" class="absolute inset-0 w-full h-full object-cover pointer-events-none layer-img" alt="Reference skeleton overlay" src="" />
+        <img id="left-reference-skeleton" class="absolute inset-0 w-full h-full object-cover pointer-events-none z-10 layer-img" alt="Reference skeleton overlay" src="" />
         <div class="absolute inset-x-0 bottom-0 z-10 px-4 py-3 text-white">
           <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-white/80">{{ tt('Reference Video', '参考视频') }}</p>
           <p class="text-sm font-semibold">{{ exercise.name if exercise else tt('Reference', '参考') }}</p>

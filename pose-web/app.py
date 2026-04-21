@@ -451,9 +451,18 @@ def get_video_frame_for_time(video_capture, reference_time_sec):
 def read_reference_pose(exercise, reference_time_sec):
     rel_video_path = exercise["video"]
     video_path = os.path.join(app.root_path, rel_video_path)
-    print("Processing video:", video_path, flush=True)
+    file_exists = os.path.exists(video_path)
+    print(
+        "[reference-frame] video path:",
+        video_path,
+        "exists:",
+        file_exists,
+        "reference_time:",
+        round(reference_time_sec, 3),
+        flush=True,
+    )
 
-    if not os.path.exists(video_path):
+    if not file_exists:
         return None, None, None, jsonify({"error": f"Video not found: {video_path}"}), 500
 
     init_resources(video_path)
@@ -462,11 +471,21 @@ def read_reference_pose(exercise, reference_time_sec):
         if cap_video is None or not cap_video.isOpened():
             return video_path, None, None, jsonify({"error": "Cannot open reference video"}), 500
         ok_v, frame_v = get_video_frame_for_time(cap_video, reference_time_sec)
-        print("Frame read success:", ok_v, flush=True)
         result_v = landmarker.detect(to_mp_image(frame_v)) if ok_v else None
 
     if not ok_v:
         return video_path, None, None, jsonify({"error": "Failed to read reference video"}), 500
+
+    reference_landmarks = get_landmarks(result_v)
+    print(
+        "[reference-frame] frame read:",
+        ok_v,
+        "pose_detected:",
+        reference_landmarks is not None,
+        "landmark_count:",
+        len(reference_landmarks) if reference_landmarks else 0,
+        flush=True,
+    )
 
     return video_path, frame_v, result_v, None, None
 

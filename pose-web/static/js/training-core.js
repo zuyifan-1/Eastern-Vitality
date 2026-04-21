@@ -125,6 +125,38 @@ function setImage(el, dataUrlPrefix, payload) {
   }
 }
 
+function logReferenceSkeletonLayer() {
+  if (!leftReferenceSkeleton) {
+    console.log("[reference-skeleton] layer missing");
+    return;
+  }
+
+  const rect = leftReferenceSkeleton.getBoundingClientRect();
+  const styles = window.getComputedStyle(leftReferenceSkeleton);
+  console.log("[reference-skeleton] layer state", {
+    display: styles.display,
+    visibility: styles.visibility,
+    opacity: styles.opacity,
+    zIndex: styles.zIndex,
+    width: rect.width,
+    height: rect.height,
+    hasSrc: Boolean(leftReferenceSkeleton.getAttribute("src")),
+    mode: selectedMode,
+    enabled: showReferenceSkeleton,
+  });
+}
+
+function drawReferenceSkeleton(data) {
+  console.log("[reference-skeleton] drawReferenceSkeleton", {
+    hasReferencePose: data?.has_reference_pose,
+    landmarkCount: data?.reference_landmark_count,
+    imageLength: data?.reference_image?.length || 0,
+  });
+  setImage(leftReferenceSkeleton, "data:image/png;base64,", data.reference_image);
+  applyLayerVisibility();
+  logReferenceSkeletonLayer();
+}
+
 function clearImage(el) {
   if (el) {
     el.src = "";
@@ -156,9 +188,8 @@ function applyLayerVisibility() {
 
 function updateUI(data) {
   console.log("Received pose data:", data);
-  setImage(leftReferenceSkeleton, "data:image/png;base64,", data.reference_image);
+  drawReferenceSkeleton(data);
   setImage(rightReferenceOverlay, "data:image/png;base64,", data.reference_overlay_image);
-  applyLayerVisibility();
 
   const score = Math.round(data.score || 0);
   latestScore = score;
@@ -194,10 +225,18 @@ function updateUI(data) {
 
 async function fetchReferenceSkeletonFrame() {
   if (!showReferenceSkeleton || isFetchingReferenceFrame || !referenceVideo) {
+    console.log("[reference-skeleton] fetch skipped", {
+      showReferenceSkeleton,
+      isFetchingReferenceFrame,
+      hasReferenceVideo: Boolean(referenceVideo),
+    });
     return;
   }
 
-  console.log("Skeleton mode triggered");
+  console.log("[reference-skeleton] /api/reference-frame request", {
+    referenceTime: referenceVideo.currentTime || 0,
+    mode: selectedMode,
+  });
   isFetchingReferenceFrame = true;
 
   try {
@@ -210,13 +249,20 @@ async function fetchReferenceSkeletonFrame() {
     });
 
     const data = await response.json();
-    console.log("Received pose data:", data);
+    console.log("[reference-skeleton] /api/reference-frame response", {
+      ok: response.ok,
+      status: response.status,
+      hasReferencePose: data.has_reference_pose,
+      landmarkCount: data.reference_landmark_count,
+      processingMs: data.processing_ms,
+      imageLength: data.reference_image?.length || 0,
+      error: data.error,
+    });
     if (!response.ok) {
       throw new Error(data.error || "Failed to load reference skeleton");
     }
 
-    setImage(leftReferenceSkeleton, "data:image/png;base64,", data.reference_image);
-    applyLayerVisibility();
+    drawReferenceSkeleton(data);
   } catch (error) {
     console.error("Failed to load reference skeleton", error);
   } finally {
@@ -595,7 +641,14 @@ function cleanupMedia() {
 }
 
 if (startBtn) {
-  startBtn.addEventListener("click", startPolling);
+  startBtn.addEventListener("click", () => {
+    console.log("[training] Start clicked", {
+      exerciseId: selectedExerciseId,
+      mode: selectedMode,
+      referenceSrc: referenceVideo?.currentSrc || referenceVideo?.querySelector("source")?.src || "",
+    });
+    startPolling();
+  });
 }
 
 if (pauseBtn) {
