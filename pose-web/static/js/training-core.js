@@ -125,6 +125,42 @@ function setImage(el, dataUrlPrefix, payload) {
   }
 }
 
+function isCanvasElement(el) {
+  return el && el.tagName && el.tagName.toLowerCase() === "canvas";
+}
+
+function syncElementCanvasSize(canvas, sourceEl) {
+  if (!canvas) {
+    return { width: 0, height: 0 };
+  }
+
+  const rect = canvas.getBoundingClientRect();
+  const fallbackWidth = sourceEl?.clientWidth || rect.width || 720;
+  const fallbackHeight = sourceEl?.clientHeight || rect.height || 1280;
+  const width = Math.max(Math.round(rect.width || fallbackWidth), 1);
+  const height = Math.max(Math.round(rect.height || fallbackHeight), 1);
+
+  if (canvas.width !== width) {
+    canvas.width = width;
+  }
+  if (canvas.height !== height) {
+    canvas.height = height;
+  }
+
+  return { width, height };
+}
+
+function scaledReferencePoint(point, width, height) {
+  if (!point) {
+    return null;
+  }
+
+  return {
+    x: Number(point.x ?? 0) * width,
+    y: Number(point.y ?? 0) * height,
+  };
+}
+
 function logReferenceSkeletonLayer() {
   if (!leftReferenceSkeleton) {
     console.log("[reference-skeleton] layer missing");
@@ -132,7 +168,63 @@ function logReferenceSkeletonLayer() {
   }
 
   const rect = leftReferenceSkeleton.getBoundingClientRect();
+  const videoRect = referenceVideo?.getBoundingClientRect?.();
   const styles = window.getComputedStyle(leftReferenceSkeleton);
+  const parent = leftReferenceSkeleton.parentElement;
+  const parentRect = parent?.getBoundingClientRect?.();
+  const zeroSize = rect.width <= 0 || rect.height <= 0;
+  const hiddenReasons = [];
+  if (!isCanvasElement(leftReferenceSkeleton)) {
+    hiddenReasons.push("wrong DOM node: reference skeleton layer is not a canvas");
+  }
+  if (styles.display === "none" || styles.visibility === "hidden" || Number(styles.opacity) === 0) {
+    hiddenReasons.push("hidden layer");
+  }
+  if (zeroSize) {
+    hiddenReasons.push("zero size");
+  }
+  if (parent && (parentRect.width <= 0 || parentRect.height <= 0)) {
+    hiddenReasons.push("wrong parent container or zero-size parent");
+  }
+
+  console.log("[reference-skeleton] visible canvas verification", {
+    id: leftReferenceSkeleton.id,
+    className: leftReferenceSkeleton.className,
+    tagName: leftReferenceSkeleton.tagName,
+    display: styles.display,
+    opacity: styles.opacity,
+    zIndex: styles.zIndex,
+    pointerEvents: styles.pointerEvents,
+    zeroSize,
+    hiddenReasons,
+    canvasWidth: leftReferenceSkeleton.width,
+    canvasHeight: leftReferenceSkeleton.height,
+    canvasRect: {
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height,
+    },
+    videoVideoWidth: referenceVideo?.videoWidth || 0,
+    videoVideoHeight: referenceVideo?.videoHeight || 0,
+    videoClientWidth: referenceVideo?.clientWidth || 0,
+    videoClientHeight: referenceVideo?.clientHeight || 0,
+    videoRect: videoRect ? {
+      x: videoRect.x,
+      y: videoRect.y,
+      width: videoRect.width,
+      height: videoRect.height,
+    } : null,
+    parentId: parent?.id || "",
+    parentClassName: parent?.className || "",
+    parentRect: parentRect ? {
+      x: parentRect.x,
+      y: parentRect.y,
+      width: parentRect.width,
+      height: parentRect.height,
+    } : null,
+  });
+
   console.log("[reference-skeleton] layer state", {
     display: styles.display,
     visibility: styles.visibility,
@@ -146,19 +238,103 @@ function logReferenceSkeletonLayer() {
   });
 }
 
+function drawReferenceCanvasProbe(data) {
+  if (!isCanvasElement(leftReferenceSkeleton)) {
+    console.warn("[reference-skeleton] forced visual test cannot draw: visible layer is not a canvas", {
+      id: leftReferenceSkeleton?.id || "",
+      tagName: leftReferenceSkeleton?.tagName || "",
+    });
+    setImage(leftReferenceSkeleton, "data:image/png;base64,", data.reference_image);
+    return;
+  }
+
+  const ctx = leftReferenceSkeleton.getContext("2d");
+  const { width, height } = syncElementCanvasSize(leftReferenceSkeleton, referenceVideo);
+  const landmarks = Array.isArray(data?.reference_landmarks) ? data.reference_landmarks : [];
+  const selectedIndexes = [0, 11, 12];
+  const selectedLandmarks = selectedIndexes.map((index) => landmarks[index] || null);
+  const scaledPoints = selectedLandmarks.map((point) => scaledReferencePoint(point, width, height));
+  const first3Landmarks = landmarks.slice(0, 3);
+  const first3ScaledPoints = first3Landmarks.map((point) => scaledReferencePoint(point, width, height));
+
+  ctx.clearRect(0, 0, width, height);
+
+  if (!showReferenceSkeleton) {
+    console.log("[reference-skeleton] draw skipped after clear because video skeleton mode is inactive");
+    return;
+  }
+
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,0,0,1)";
+  ctx.lineWidth = 8;
+  ctx.strokeRect(4, 4, width - 8, height - 8);
+
+  ctx.fillStyle = "rgba(0,255,0,1)";
+  ctx.beginPath();
+  ctx.arc(width / 2, height / 2, 18, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.font = "700 16px sans-serif";
+  ctx.textBaseline = "top";
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = "rgba(0,0,0,0.85)";
+  ctx.strokeText("REFERENCE CANVAS ACTIVE", 12, 12);
+  ctx.fillStyle = "rgba(255,255,255,1)";
+  ctx.fillText("REFERENCE CANVAS ACTIVE", 12, 12);
+
+  selectedLandmarks.forEach((point, offset) => {
+    const scaled = scaledPoints[offset];
+    if (!point || !scaled) {
+      return;
+    }
+    ctx.beginPath();
+    ctx.arc(scaled.x, scaled.y, 14, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,0,255,0.95)";
+    ctx.fill();
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = "rgba(255,255,0,1)";
+    ctx.stroke();
+  });
+  ctx.restore();
+
+  console.log("[reference-skeleton] forced draw geometry", {
+    canvasWidth: leftReferenceSkeleton.width,
+    canvasHeight: leftReferenceSkeleton.height,
+    canvasRect: leftReferenceSkeleton.getBoundingClientRect(),
+    videoVideoWidth: referenceVideo?.videoWidth || 0,
+    videoVideoHeight: referenceVideo?.videoHeight || 0,
+    videoClientWidth: referenceVideo?.clientWidth || 0,
+    videoClientHeight: referenceVideo?.clientHeight || 0,
+    first3LandmarkCoordinatesBeforeScaling: first3Landmarks,
+    first3ScaledPixelCoordinates: first3ScaledPoints,
+    renderedLandmarkCoordinatesBeforeScaling: selectedLandmarks,
+    renderedScaledPixelCoordinates: scaledPoints,
+    drawnLandmarkIndexes: selectedIndexes,
+    drawnLandmarkCount: scaledPoints.filter(Boolean).length,
+  });
+}
+
 function drawReferenceSkeleton(data) {
   console.log("[reference-skeleton] drawReferenceSkeleton", {
     hasReferencePose: data?.has_reference_pose,
     landmarkCount: data?.reference_landmark_count,
     imageLength: data?.reference_image?.length || 0,
+    rawLandmarkCount: data?.reference_landmarks?.length || 0,
   });
-  setImage(leftReferenceSkeleton, "data:image/png;base64,", data.reference_image);
   applyLayerVisibility();
+  drawReferenceCanvasProbe(data);
   logReferenceSkeletonLayer();
 }
 
 function clearImage(el) {
-  if (el) {
+  if (!el) {
+    return;
+  }
+
+  if (isCanvasElement(el)) {
+    const ctx = el.getContext("2d");
+    ctx.clearRect(0, 0, el.width, el.height);
+  } else {
     el.src = "";
   }
 }

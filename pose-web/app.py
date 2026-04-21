@@ -490,6 +490,21 @@ def read_reference_pose(exercise, reference_time_sec):
     return video_path, frame_v, result_v, None, None
 
 
+def serialize_landmarks(landmarks):
+    if landmarks is None:
+        return []
+
+    return [
+        {
+            "x": float(getattr(point, "x", 0.0)),
+            "y": float(getattr(point, "y", 0.0)),
+            "z": float(getattr(point, "z", 0.0)),
+            "visibility": float(getattr(point, "visibility", 0.0)),
+        }
+        for point in landmarks
+    ]
+
+
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -799,6 +814,7 @@ def api_score_frame():
         )
 
         ref_h, ref_w = frame_v.shape[:2]
+        reference_landmarks = get_landmarks(result_v)
         reference_overlay_left = draw_pose_overlay(
             ref_w,
             ref_h,
@@ -826,6 +842,9 @@ def api_score_frame():
             "camera_pose_overlay_image": encode_png_frame(user_pose_overlay),
             "reference_image": encode_png_frame(reference_overlay_left),
             "reference_overlay_image": encode_png_frame(reference_overlay_right),
+            "has_reference_pose": reference_landmarks is not None,
+            "reference_landmark_count": len(reference_landmarks) if reference_landmarks else 0,
+            "reference_landmarks": serialize_landmarks(reference_landmarks),
         })
     except Exception as exc:
         app.logger.exception("Failed to build frame payload")
@@ -850,6 +869,7 @@ def api_reference_frame():
             return error_response, status_code
 
         ref_h, ref_w = frame_v.shape[:2]
+        reference_landmarks = get_landmarks(result_v)
         reference_overlay_left = draw_pose_overlay(
             ref_w,
             ref_h,
@@ -858,8 +878,6 @@ def api_reference_frame():
             point_color=(95, 150, 95, 255)
         )
 
-        reference_landmarks = get_landmarks(result_v)
-
         return jsonify({
             "exercise_name": exercise["name"],
             "reference_time": round(reference_time_sec, 3),
@@ -867,6 +885,7 @@ def api_reference_frame():
             "has_reference_pose": reference_landmarks is not None,
             "reference_landmark_count": len(reference_landmarks) if reference_landmarks else 0,
             "reference_image": encode_png_frame(reference_overlay_left),
+            "reference_landmarks": serialize_landmarks(reference_landmarks),
         })
     except Exception as exc:
         app.logger.exception("Failed to build reference frame payload")
