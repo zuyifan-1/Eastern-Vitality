@@ -40,6 +40,9 @@ pip install -r requirements.txt
 gunicorn -c gunicorn.conf.py wsgi:app
 ```
 
+The deployment is pinned to Python 3.11.11 through `PYTHON_VERSION` in `render.yaml`.
+The repository also includes `.python-version` for tools and manual Render services that read it.
+
 ## Environment Variables
 
 See `.env.example`.
