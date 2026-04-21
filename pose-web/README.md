@@ -55,14 +55,12 @@ Important defaults:
 
 SQLite is fine for a demo. For real multi-user usage, move to PostgreSQL.
 
-## Large Video Assets
+## Reference Videos
 
-The local MP4 files are too large for normal GitHub uploads. GitHub rejects ordinary files over 100MB, and several files in `static/videos/` are larger than that.
+Compressed reference videos live in `static/videos/` and are served by Flask at `/static/videos/<filename>.mp4`.
 
-Use one of these before deploying publicly:
+Before deploying publicly:
 
-- Compress each demo video below 100MB.
-- Put videos in object storage or a CDN and update `data/exercises.py` to point to those URLs.
-- Use Git LFS if your Render setup is configured to fetch LFS files.
-
-The current `.gitignore` keeps local MP4 files out of normal Git commits so the repository can be pushed cleanly.
+- Keep each demo video below GitHub's 100MB per-file limit.
+- Make sure `.gitignore` does not ignore `*.mp4` or `pose-web/static/videos/`.
+- Reference videos through Flask static URLs, for example `url_for('static', filename='videos/example.mp4')`.

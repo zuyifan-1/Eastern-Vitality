@@ -129,7 +129,7 @@
         </div>
         <div class="absolute inset-0 bg-black">
           <video id="reference-video" class="absolute inset-0 w-full h-full object-cover" loop playsinline preload="auto">
-            <source src="/{{ exercise.video }}" type="video/mp4">
+            <source src="{{ url_for('static', filename=exercise.video.replace('static/', '')) }}" type="video/mp4">
           </video>
           <img id="left-reference-skeleton" class="absolute inset-0 w-full h-full object-cover pointer-events-none z-10 layer-img" alt="Reference skeleton overlay" src="" />
         </div>

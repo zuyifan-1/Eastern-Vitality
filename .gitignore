@@ -18,4 +18,3 @@ instance/
 raw_videos/
 exports/
 pose-web/reference.mp4
-pose-web/static/videos/*.mp4
