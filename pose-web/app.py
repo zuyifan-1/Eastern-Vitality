@@ -19,6 +19,7 @@ from pose_engine import (
     draw_pose_overlay,
     draw_pose_overlay_from_landmarks,
     encode_png_frame,
+    get_landmarks,
     normalize_landmarks_payload,
     to_mp_image,
 )
@@ -441,6 +442,29 @@ def get_video_frame_for_time(video_capture, reference_time_sec):
     return ok, frame
 
 
+def read_reference_pose(exercise, reference_time_sec):
+    rel_video_path = exercise["video"]
+    video_path = os.path.join(app.root_path, rel_video_path)
+    print("Processing video:", video_path, flush=True)
+
+    if not os.path.exists(video_path):
+        return None, None, None, jsonify({"error": f"Video not found: {video_path}"}), 500
+
+    init_resources(video_path)
+
+    with video_lock:
+        if cap_video is None or not cap_video.isOpened():
+            return video_path, None, None, jsonify({"error": "Cannot open reference video"}), 500
+        ok_v, frame_v = get_video_frame_for_time(cap_video, reference_time_sec)
+        print("Frame read success:", ok_v, flush=True)
+        result_v = landmarker.detect(to_mp_image(frame_v)) if ok_v else None
+
+    if not ok_v:
+        return video_path, None, None, jsonify({"error": "Failed to read reference video"}), 500
+
+    return video_path, frame_v, result_v, None, None
+
+
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -727,22 +751,12 @@ def api_score_frame():
         if user_landmarks is None:
             return jsonify({"error": "No pose detected from browser camera."}), 400
 
-        rel_video_path = exercise["video"]
-        video_path = os.path.join(app.root_path, rel_video_path)
-
-        if not os.path.exists(video_path):
-            return jsonify({"error": f"Video not found: {video_path}"}), 500
-
-        init_resources(video_path)
-
-        with video_lock:
-            if cap_video is None or not cap_video.isOpened():
-                return jsonify({"error": "Cannot open reference video"}), 500
-            ok_v, frame_v = get_video_frame_for_time(cap_video, reference_time_sec)
-            if ok_v:
-                result_v = landmarker.detect(to_mp_image(frame_v))
-        if not ok_v:
-            return jsonify({"error": "Failed to read reference video"}), 500
+        _, frame_v, result_v, error_response, status_code = read_reference_pose(
+            exercise,
+            reference_time_sec,
+        )
+        if error_response is not None:
+            return error_response, status_code
 
         ref_angles = extract_joint_angles(result_v)
         cam_angles = extract_joint_angles_from_landmarks(user_landmarks)
@@ -790,6 +804,47 @@ def api_score_frame():
         })
     except Exception as exc:
         app.logger.exception("Failed to build frame payload")
+        return jsonify({"error": f"{type(exc).__name__}: {exc}"}), 500
+
+
+@app.route("/api/reference-frame", methods=["POST"])
+@login_required
+def api_reference_frame():
+    try:
+        started_at = time.perf_counter()
+        payload = request.get_json(silent=True) or {}
+        exercise_id = session.get("exercise_id", EXERCISES[0]["id"])
+        exercise = get_exercise_by_id(exercise_id)
+        reference_time_sec = float(payload.get("reference_time", 0) or 0)
+
+        _, frame_v, result_v, error_response, status_code = read_reference_pose(
+            exercise,
+            reference_time_sec,
+        )
+        if error_response is not None:
+            return error_response, status_code
+
+        ref_h, ref_w = frame_v.shape[:2]
+        reference_overlay_left = draw_pose_overlay(
+            ref_w,
+            ref_h,
+            result_v,
+            line_color=(230, 192, 79, 255),
+            point_color=(95, 150, 95, 255)
+        )
+
+        reference_landmarks = get_landmarks(result_v)
+
+        return jsonify({
+            "exercise_name": exercise["name"],
+            "reference_time": round(reference_time_sec, 3),
+            "processing_ms": round((time.perf_counter() - started_at) * 1000, 1),
+            "has_reference_pose": reference_landmarks is not None,
+            "reference_landmark_count": len(reference_landmarks) if reference_landmarks else 0,
+            "reference_image": encode_png_frame(reference_overlay_left),
+        })
+    except Exception as exc:
+        app.logger.exception("Failed to build reference frame payload")
         return jsonify({"error": f"{type(exc).__name__}: {exc}"}), 500
 
 

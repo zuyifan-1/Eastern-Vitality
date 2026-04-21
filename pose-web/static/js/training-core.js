@@ -92,6 +92,7 @@ let latestUserLandmarks = null;
 let poseLandmarker = null;
 let poseSetupPromise = null;
 let mediaStream = null;
+let isFetchingReferenceFrame = false;
 
 function updateAudioButton() {
   if (!audioToggleBtn || !referenceVideo) {
@@ -154,6 +155,7 @@ function applyLayerVisibility() {
 }
 
 function updateUI(data) {
+  console.log("Received pose data:", data);
   setImage(leftReferenceSkeleton, "data:image/png;base64,", data.reference_image);
   setImage(rightReferenceOverlay, "data:image/png;base64,", data.reference_overlay_image);
   applyLayerVisibility();
@@ -187,6 +189,38 @@ function updateUI(data) {
     } else {
       feedbackBanner.classList.add("hidden");
     }
+  }
+}
+
+async function fetchReferenceSkeletonFrame() {
+  if (!showReferenceSkeleton || isFetchingReferenceFrame || !referenceVideo) {
+    return;
+  }
+
+  console.log("Skeleton mode triggered");
+  isFetchingReferenceFrame = true;
+
+  try {
+    const response = await fetch("/api/reference-frame", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        reference_time: referenceVideo.currentTime || 0,
+      }),
+    });
+
+    const data = await response.json();
+    console.log("Received pose data:", data);
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to load reference skeleton");
+    }
+
+    setImage(leftReferenceSkeleton, "data:image/png;base64,", data.reference_image);
+    applyLayerVisibility();
+  } catch (error) {
+    console.error("Failed to load reference skeleton", error);
+  } finally {
+    isFetchingReferenceFrame = false;
   }
 }
 
@@ -382,6 +416,7 @@ async function fetchFrame() {
     drawUserSkeleton(landmarks);
 
     if (!landmarks) {
+      await fetchReferenceSkeletonFrame();
       latestScore = 0;
       if (scoreRing) {
         scoreRing.style.setProperty("--score", "0%");
@@ -457,6 +492,8 @@ async function startPolling() {
   if (referenceVideo && referenceVideo.paused) {
     referenceVideo.play().catch(() => {});
   }
+
+  fetchReferenceSkeletonFrame();
 
   fetchFrame().finally(() => {
     scheduleNextFetch();
@@ -593,6 +630,9 @@ toggleReferenceSkeletonBtns.forEach((btn) => {
   btn.addEventListener("click", () => {
     showReferenceSkeleton = !showReferenceSkeleton;
     applyLayerVisibility();
+    if (showReferenceSkeleton) {
+      fetchReferenceSkeletonFrame();
+    }
   });
 });
 
@@ -615,6 +655,7 @@ if (referenceVideo) {
   referenceVideo.muted = false;
   referenceVideo.volume = 1;
   referenceVideo.addEventListener("ended", stopPolling);
+  referenceVideo.addEventListener("timeupdate", fetchReferenceSkeletonFrame);
 }
 
 window.addEventListener("resize", () => {
