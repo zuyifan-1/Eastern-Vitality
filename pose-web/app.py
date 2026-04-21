@@ -51,6 +51,11 @@ app.config.update(
     SEND_FILE_MAX_AGE_DEFAULT=timedelta(days=30) if IS_PRODUCTION else timedelta(seconds=0),
 )
 
+STATIC_ASSET_VERSION = os.environ.get("STATIC_ASSET_VERSION") or os.environ.get("RENDER_GIT_COMMIT")
+if not STATIC_ASSET_VERSION:
+    training_core_path = os.path.join(app.root_path, "static", "js", "training-core.js")
+    STATIC_ASSET_VERSION = str(int(os.path.getmtime(training_core_path))) if os.path.exists(training_core_path) else "1"
+
 trusted_hosts = [host.strip() for host in os.environ.get("TRUSTED_HOSTS", "").split(",") if host.strip()]
 if trusted_hosts:
     app.config["TRUSTED_HOSTS"] = trusted_hosts
@@ -304,6 +309,7 @@ def inject_template_helpers():
     return {
         "t": t,
         "tt": tt,
+        "static_asset_version": STATIC_ASSET_VERSION,
         "current_lang": get_lang(),
         "current_user": g.get("user"),
     }
