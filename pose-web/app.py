@@ -47,6 +47,7 @@ app.config.update(
     SESSION_COOKIE_SECURE=env_flag("SESSION_COOKIE_SECURE", IS_PRODUCTION),
     PERMANENT_SESSION_LIFETIME=timedelta(days=int(os.environ.get("SESSION_DAYS", "14"))),
     PREFERRED_URL_SCHEME="https" if IS_PRODUCTION else "http",
+    SEND_FILE_MAX_AGE_DEFAULT=timedelta(days=30) if IS_PRODUCTION else timedelta(seconds=0),
 )
 
 trusted_hosts = [host.strip() for host in os.environ.get("TRUSTED_HOSTS", "").split(",") if host.strip()]

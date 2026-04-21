@@ -140,7 +140,7 @@
 
       <div class="floating-reference" id="floating-reference" tabindex="0" role="button" aria-pressed="false" aria-label="{{ tt('Expand reference video', '放大参考视频') }}">
         <div class="floating-reference-hint"><span class="material-symbols-outlined text-[16px]">zoom_out_map</span></div>
-        <video id="reference-video" class="absolute inset-0 w-full h-full object-cover" loop playsinline preload="auto">
+        <video id="reference-video" class="absolute inset-0 w-full h-full object-cover" loop playsinline preload="metadata">
           <source src="{{ url_for('static', filename=exercise.video.replace('static/', '')) }}" type="video/mp4">
         </video>
         <img id="left-reference-skeleton" class="absolute inset-0 w-full h-full object-cover pointer-events-none layer-img" alt="Reference skeleton overlay" src="" />
