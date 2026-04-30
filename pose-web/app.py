@@ -1,3 +1,4 @@
+import logging
 import os
 import sqlite3
 import time
@@ -26,6 +27,8 @@ from pose_engine import (
 from data.exercises import EXERCISES, BODY_PART_OPTIONS
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
+app.logger.setLevel(logging.INFO)
 
 
 def env_flag(name, default=False):
@@ -73,6 +76,55 @@ cap_video = None
 landmarker = None
 current_video_path = None
 video_lock = Lock()
+
+
+def safe_file_size(path):
+    try:
+        return os.path.getsize(path)
+    except OSError:
+        return None
+
+
+def looks_like_lfs_pointer(path):
+    try:
+        with open(path, "rb") as file_obj:
+            header = file_obj.read(256)
+    except OSError:
+        return False
+    return header.startswith(b"version https://git-lfs.github.com/spec/v1")
+
+
+def build_reference_debug(exercise, reference_time_sec):
+    rel_video_path = exercise["video"]
+    video_path = os.path.join(app.root_path, rel_video_path)
+    model_exists = os.path.exists(MODEL_PATH)
+    model_size = safe_file_size(MODEL_PATH)
+
+    return {
+        "exercise_id": exercise.get("id"),
+        "exercise_name": exercise.get("name"),
+        "reference_time": round(reference_time_sec, 3),
+        "app_root": app.root_path,
+        "cwd": os.getcwd(),
+        "video_relative_path": rel_video_path,
+        "video_path": video_path,
+        "video_exists": os.path.exists(video_path),
+        "video_size_bytes": safe_file_size(video_path),
+        "video_is_lfs_pointer": looks_like_lfs_pointer(video_path) if os.path.exists(video_path) else False,
+        "model_path": MODEL_PATH,
+        "model_exists": model_exists,
+        "model_size_bytes": model_size,
+        "database_path": DATABASE_PATH,
+        "render_service": os.environ.get("RENDER_SERVICE_NAME"),
+        "render_git_commit": os.environ.get("RENDER_GIT_COMMIT"),
+    }
+
+
+def reference_error(message, debug_info, status_code=500):
+    debug_info = dict(debug_info)
+    debug_info["error"] = message
+    app.logger.error("[reference-frame] error: %s | debug=%s", message, debug_info)
+    return jsonify({"error": message, "reference_debug": debug_info}), status_code
 
 TRANSLATIONS = {
     "nav_home": {"en": "Home", "zh": "首页"},
@@ -449,45 +501,53 @@ def get_video_frame_for_time(video_capture, reference_time_sec):
 
 
 def read_reference_pose(exercise, reference_time_sec):
-    rel_video_path = exercise["video"]
-    video_path = os.path.join(app.root_path, rel_video_path)
-    file_exists = os.path.exists(video_path)
-    print(
-        "[reference-frame] video path:",
-        video_path,
-        "exists:",
-        file_exists,
-        "reference_time:",
-        round(reference_time_sec, 3),
-        flush=True,
-    )
+    debug_info = build_reference_debug(exercise, reference_time_sec)
+    video_path = debug_info["video_path"]
+    app.logger.info("[reference-frame] begin debug=%s", debug_info)
 
-    if not file_exists:
-        return None, None, None, jsonify({"error": f"Video not found: {video_path}"}), 500
+    if not debug_info["video_exists"]:
+        return None, None, None, reference_error(f"Video not found: {video_path}", debug_info), debug_info
 
-    init_resources(video_path)
+    try:
+        init_resources(video_path)
+    except Exception as exc:
+        debug_info["init_resources_exception"] = f"{type(exc).__name__}: {exc}"
+        app.logger.exception("[reference-frame] init_resources failed")
+        return None, None, None, reference_error("Failed to initialize MediaPipe/OpenCV resources", debug_info), debug_info
 
     with video_lock:
-        if cap_video is None or not cap_video.isOpened():
-            return video_path, None, None, jsonify({"error": "Cannot open reference video"}), 500
+        capture_opened = cap_video is not None and cap_video.isOpened()
+        debug_info["capture_opened"] = capture_opened
+        debug_info["capture_backend"] = cap_video.getBackendName() if capture_opened and hasattr(cap_video, "getBackendName") else None
+        debug_info["capture_fps"] = float(cap_video.get(cv2.CAP_PROP_FPS) or 0) if capture_opened else 0.0
+        debug_info["capture_frame_count"] = int(cap_video.get(cv2.CAP_PROP_FRAME_COUNT) or 0) if capture_opened else 0
+
+        if not capture_opened:
+            return video_path, None, None, reference_error("Cannot open reference video", debug_info), debug_info
+
         ok_v, frame_v = get_video_frame_for_time(cap_video, reference_time_sec)
-        result_v = landmarker.detect(to_mp_image(frame_v)) if ok_v else None
+        debug_info["frame_read_ok"] = ok_v
+        debug_info["frame_shape"] = list(frame_v.shape) if ok_v and frame_v is not None else None
 
-    if not ok_v:
-        return video_path, None, None, jsonify({"error": "Failed to read reference video"}), 500
+        if not ok_v:
+            return video_path, None, None, reference_error("Failed to read reference video", debug_info), debug_info
 
+        try:
+            result_v = landmarker.detect(to_mp_image(frame_v))
+        except Exception as exc:
+            debug_info["landmarker_exception"] = f"{type(exc).__name__}: {exc}"
+            app.logger.exception("[reference-frame] landmarker.detect failed")
+            return video_path, frame_v, None, reference_error("MediaPipe failed while processing the reference frame", debug_info), debug_info
+
+    pose_landmarks = getattr(result_v, "pose_landmarks", None)
     reference_landmarks = get_landmarks(result_v)
-    print(
-        "[reference-frame] frame read:",
-        ok_v,
-        "pose_detected:",
-        reference_landmarks is not None,
-        "landmark_count:",
-        len(reference_landmarks) if reference_landmarks else 0,
-        flush=True,
-    )
+    debug_info["pose_landmarks_sets"] = len(pose_landmarks) if pose_landmarks else 0
+    debug_info["has_reference_pose"] = reference_landmarks is not None
+    debug_info["reference_landmark_count"] = len(reference_landmarks) if reference_landmarks else 0
 
-    return video_path, frame_v, result_v, None, None
+    app.logger.info("[reference-frame] processed debug=%s", debug_info)
+
+    return video_path, frame_v, result_v, None, debug_info
 
 
 def serialize_landmarks(landmarks):
@@ -791,12 +851,12 @@ def api_score_frame():
         if user_landmarks is None:
             return jsonify({"error": "No pose detected from browser camera."}), 400
 
-        _, frame_v, result_v, error_response, status_code = read_reference_pose(
+        _, frame_v, result_v, error_response, reference_debug = read_reference_pose(
             exercise,
             reference_time_sec,
         )
         if error_response is not None:
-            return error_response, status_code
+            return error_response
 
         ref_angles = extract_joint_angles(result_v)
         cam_angles = extract_joint_angles_from_landmarks(user_landmarks)
@@ -845,6 +905,7 @@ def api_score_frame():
             "has_reference_pose": reference_landmarks is not None,
             "reference_landmark_count": len(reference_landmarks) if reference_landmarks else 0,
             "reference_landmarks": serialize_landmarks(reference_landmarks),
+            "reference_debug": reference_debug,
         })
     except Exception as exc:
         app.logger.exception("Failed to build frame payload")
@@ -861,12 +922,12 @@ def api_reference_frame():
         exercise = get_exercise_by_id(exercise_id)
         reference_time_sec = float(payload.get("reference_time", 0) or 0)
 
-        _, frame_v, result_v, error_response, status_code = read_reference_pose(
+        _, frame_v, result_v, error_response, reference_debug = read_reference_pose(
             exercise,
             reference_time_sec,
         )
         if error_response is not None:
-            return error_response, status_code
+            return error_response
 
         ref_h, ref_w = frame_v.shape[:2]
         reference_landmarks = get_landmarks(result_v)
@@ -886,6 +947,7 @@ def api_reference_frame():
             "reference_landmark_count": len(reference_landmarks) if reference_landmarks else 0,
             "reference_image": encode_png_frame(reference_overlay_left),
             "reference_landmarks": serialize_landmarks(reference_landmarks),
+            "reference_debug": reference_debug,
         })
     except Exception as exc:
         app.logger.exception("Failed to build reference frame payload")

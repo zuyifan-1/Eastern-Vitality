@@ -239,6 +239,7 @@ function logReferenceSkeletonLayer() {
 }
 
 function drawReferenceCanvasProbe(data) {
+  console.log("PROBE FUNCTION ENTERED");
   if (!isCanvasElement(leftReferenceSkeleton)) {
     console.warn("[reference-skeleton] forced visual test cannot draw: visible layer is not a canvas", {
       id: leftReferenceSkeleton?.id || "",
@@ -424,15 +425,31 @@ async function fetchReferenceSkeletonFrame() {
       }),
     });
 
-    const data = await response.json();
+    const rawText = await response.text();
+    let data;
+    try {
+      data = rawText ? JSON.parse(rawText) : {};
+    } catch (parseError) {
+      console.error("[reference-skeleton] failed to parse /api/reference-frame response", {
+        status: response.status,
+        statusText: response.statusText,
+        rawText,
+        parseError,
+      });
+      throw parseError;
+    }
+
     console.log("[reference-skeleton] /api/reference-frame response", {
       ok: response.ok,
       status: response.status,
+      statusText: response.statusText,
       hasReferencePose: data.has_reference_pose,
       landmarkCount: data.reference_landmark_count,
       processingMs: data.processing_ms,
       imageLength: data.reference_image?.length || 0,
       error: data.error,
+      referenceDebug: data.reference_debug,
+      fullPayload: data,
     });
     if (!response.ok) {
       throw new Error(data.error || "Failed to load reference skeleton");
@@ -440,7 +457,11 @@ async function fetchReferenceSkeletonFrame() {
 
     drawReferenceSkeleton(data);
   } catch (error) {
-    console.error("Failed to load reference skeleton", error);
+    console.error("Failed to load reference skeleton", {
+      error,
+      referenceSrc: referenceVideo?.currentSrc || referenceVideo?.querySelector("source")?.src || "",
+      referenceTime: referenceVideo?.currentTime || 0,
+    });
   } finally {
     isFetchingReferenceFrame = false;
   }
