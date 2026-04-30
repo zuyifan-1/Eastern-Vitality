@@ -829,8 +829,17 @@ def save_training_session():
 
 
 @app.route("/assets/pose-landmarker.task")
-@login_required
 def pose_model_asset():
+    model_exists = os.path.exists(MODEL_PATH)
+    debug_info = {
+        "model_path": MODEL_PATH,
+        "model_exists": model_exists,
+        "model_size_bytes": safe_file_size(MODEL_PATH),
+        "model_is_lfs_pointer": looks_like_lfs_pointer(MODEL_PATH) if model_exists else False,
+    }
+    app.logger.info("[pose-model] request debug=%s", debug_info)
+    if not model_exists:
+        return jsonify({"error": "Pose landmarker model not found", "model_debug": debug_info}), 404
     return send_file(MODEL_PATH, mimetype="application/octet-stream")
 
 

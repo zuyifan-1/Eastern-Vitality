@@ -604,13 +604,15 @@ async function ensurePoseLandmarker() {
     return poseLandmarker;
   }
 
+  const modelUrl = "/assets/pose-landmarker.task";
   const vision = await FilesetResolver.forVisionTasks(
     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
   );
+  const modelAssetBuffer = await fetchPoseModelAsset(modelUrl);
 
   poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
     baseOptions: {
-      modelAssetPath: "/assets/pose-landmarker.task",
+      modelAssetBuffer,
     },
     runningMode: "VIDEO",
     numPoses: 1,
@@ -620,6 +622,62 @@ async function ensurePoseLandmarker() {
   });
 
   return poseLandmarker;
+}
+
+async function fetchPoseModelAsset(modelUrl) {
+  const response = await fetch(modelUrl, {
+    method: "GET",
+    credentials: "same-origin",
+    cache: "no-store",
+  });
+
+  const contentType = response.headers.get("content-type");
+  const contentLength = response.headers.get("content-length");
+  const clonedResponse = response.clone();
+
+  console.log("[pose-model] fetch", {
+    modelUrl,
+    status: response.status,
+    contentType,
+    contentLength,
+  });
+
+  if (!response.ok) {
+    const errorText = await clonedResponse.text().catch(() => "");
+    console.error("[pose-model] non-ok model response", {
+      modelUrl,
+      status: response.status,
+      contentType,
+      contentLength,
+      preview: errorText.slice(0, 100),
+    });
+    throw new Error(`Failed to fetch pose model: ${response.status}`);
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const modelBytes = new Uint8Array(arrayBuffer);
+  const previewText = new TextDecoder("utf-8", { fatal: false }).decode(modelBytes.slice(0, 100));
+  const looksLikeText = /^[\u0009\u000A\u000D\u0020-\u007E]*$/.test(previewText);
+
+  if (looksLikeText) {
+    console.warn("[pose-model] unexpected text-like model payload", {
+      modelUrl,
+      status: response.status,
+      contentType,
+      contentLength,
+      preview: previewText.slice(0, 100),
+    });
+  } else {
+    console.log("[pose-model] binary payload ready", {
+      modelUrl,
+      status: response.status,
+      contentType,
+      contentLength,
+      byteLength: modelBytes.byteLength,
+    });
+  }
+
+  return modelBytes;
 }
 
 async function prepareLiveTracking() {
