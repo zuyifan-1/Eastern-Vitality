@@ -4,15 +4,9 @@ services:
     env: python
     rootDir: pose-web
     buildCommand: |
-      apt-get update && apt-get install -y \
-        libgl1 \
-        libglib2.0-0 \
-        libegl1 \
-        libgles2 \
-        libsm6 \
-        libxext6 \
-        libxrender1
       pip install -r requirements.txt
+      ldconfig -p | grep GLES
+      python -c "import ctypes; ctypes.CDLL('libGLESv2.so.2'); print('libGLESv2 OK')"
     startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
